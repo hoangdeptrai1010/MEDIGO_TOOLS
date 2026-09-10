@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medigo - Tool Tạo Báo Cáo KPI & Dự Án Nhà Thuốc</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #090d16;
+      --bg-card: #111827;
+      --border-color: #1f293d;
+      --border-focus: #06b6d4;
+      --primary: #0284c7;
+      --kpi-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 22px;
+      background: rgba(17, 24, 39, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.4);
+    }
+
+    .brand-text h1 {
+      font-size: 19px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #38bdf8, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      color: #f1f5f9;
+    }
+
+    .dropzone-card {
+      background: #080d1a;
+      border: 2px dashed #233052;
+      border-radius: 12px;
+      padding: 26px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .dropzone-card:hover, .dropzone-card.drag-over {
+      border-color: var(--kpi-cyan);
+      background: rgba(6, 182, 212, 0.05);
+    }
+
+    .dropzone-card.has-file {
+      border-color: var(--accent-green);
+      background: rgba(16, 185, 129, 0.04);
+      border-style: solid;
+    }
+
+    .btn-action-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35);
+      transition: all 0.25s;
+    }
+
+    .btn-action-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(6, 182, 212, 0.5);
+    }
+
+    .btn-action-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-download-pill {
+      background: #111d33;
+      border: 1px solid var(--accent-green);
+      color: #34d399;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      border: 1px solid var(--border-color);
+      color: #cbd5e1;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .stats-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-chip-card {
+      background: #080d1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .stat-chip-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-chip-val { font-size: 18px; font-weight: 800; color: #f8fafc; }
+
+    /* Form controls */
+    .form-control {
+      background: #080d1a;
+      border: 1px solid var(--border-color);
+      color: #f1f5f9;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    /* Modal Backdrop */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: #111827;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body { padding: 22px; overflow-y: auto; flex: 1; }
+    .modal-footer { padding: 14px 22px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      border-left: 4px solid var(--accent-green);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+      z-index: 10000;
+    }
+    .toast.error { border-left-color: var(--accent-red); }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo">🎯</div>
+      <div class="brand-text">
+        <h1>MEDIGO - TOOL TẠO BÁO CÁO KPI & DỰ ÁN</h1>
+        <p>Phân tích dự án, đối soát hóa đơn KiotViet & tự động xuất file Excel hoàn thiện</p>
+      </div>
+    </div>
+    
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <button class="btn-secondary" onclick="openPlanBuilderModal()">
+        <span>🛠️</span> Dựng Kế Hoạch KPI
+      </button>
+      <select id="sel-month" class="form-control" onchange="onMonthChange()">
+        <option value="8" selected>Tháng 8 / 2026</option>
+        <option value="9">Tháng 9 / 2026</option>
+        <option value="7">Tháng 7 / 2026</option>
+        <option value="6">Tháng 6 / 2026</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Step 1: Project Plan -->
+  <div class="section-card">
+    <div class="section-title">
+      <span>1. File Gói Kế Hoạch / Dự Án KPI (.xlsx)</span>
+      <button class="btn-secondary" style="font-size: 12px;" onclick="openPlanBuilderModal()">➕ Tự Dựng File Kế Hoạch</button>
+    </div>
+    <div class="dropzone-card" id="drop-project" onclick="document.getElementById('file-project').click()">
+      <input type="file" id="file-project" accept=".xlsx,.xls" style="display: none;">
+      <div style="font-size: 28px; margin-bottom: 6px;">📊</div>
+      <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Kéo thả File Kế Hoạch / Dự Án KPI vào đây</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">File <code>KeHoachKPI_2026-xx.xlsx</code> để định hình số Sheet nhà thuốc & danh mục SKUs</div>
+      <div id="status-project"><span style="color: #94a3b8; font-size: 12px;">Chưa chọn (Hệ thống sẽ dùng file kế hoạch mặc định của tháng)</span></div>
+    </div>
+  </div>
+
+  <!-- Step 2: Invoices -->
+  <div class="section-card">
+    <div class="section-title">
+      <span>2. Nạp File Hóa Đơn & Trả Hàng (KiotViet)</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div class="dropzone-card" id="drop-hd" onclick="document.getElementById('file-hd').click()">
+        <input type="file" id="file-hd" accept=".xlsx,.xls" style="display: none;">
+        <div style="font-size: 28px; margin-bottom: 6px;">🧾</div>
+        <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">File Chi Tiết Hóa Đơn (Bắt buộc)</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;"><code>DanhSachChiTietHoaDon_...xlsx</code></div>
+        <div id="status-hd"><span style="color: #94a3b8; font-size: 12px;">Bấm hoặc kéo thả file</span></div>
+      </div>
+
+      <div class="dropzone-card" id="drop-th" onclick="document.getElementById('file-th').click()">
+        <input type="file" id="file-th" accept=".xlsx,.xls" style="display: none;">
+        <div style="font-size: 28px; margin-bottom: 6px;">↩️</div>
+        <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">File Trả Hàng (Tùy chọn)</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;"><code>DanhSachChiTietTraHang_...xlsx</code></div>
+        <div id="status-th"><span style="color: #94a3b8; font-size: 12px;">Bấm hoặc kéo thả file</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Button -->
+  <button class="btn-action-primary" id="btn-generate-kpi" onclick="executeKpiProcess()">
+    <span>⚡</span> XỬ LÝ & XUẤT BÁO CÁO KPI HOÀN THIỆN
+  </button>
+
+  <!-- Result Box -->
+  <div class="section-card" id="kpi-result-box" style="display: none; margin-top: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #1e293b; padding-bottom: 10px;">
+      <div style="font-size: 15px; font-weight: 800; color: #38bdf8;">
+        ✅ ĐÃ TẠO XONG BÁO CÁO KPI HOÀN THIỆN
+      </div>
+      <a class="btn-download-pill" id="btn-download-kpi" href="/download" download="baocaokpi_hoanthien.xlsx">
+        <span>⬇️</span> Tải File Báo Cáo KPI (.xlsx)
+      </a>
+    </div>
+
+    <div class="stats-summary-grid">
+      <div class="stat-chip-card">
+        <div class="stat-chip-label">Tổng Doanh Thu Hóa Đơn</div>
+        <div class="stat-chip-val" id="lbl-kpi-rev">0 đ</div>
+      </div>
+      <div class="stat-chip-card">
+        <div class="stat-chip-label">Số Dòng Giao Dịch</div>
+        <div class="stat-chip-val" id="lbl-kpi-tx">0 dòng</div>
+      </div>
+      <div class="stat-chip-card">
+        <div class="stat-chip-label">Doanh Số Dự Án (CK/Combo)</div>
+        <div class="stat-chip-val" id="lbl-kpi-proj">0 đ</div>
+      </div>
+      <div class="stat-chip-card">
+        <div class="stat-chip-label">Số Dược Sĩ Đạt Thưởng</div>
+        <div class="stat-chip-val" id="lbl-kpi-rewarded">0 DS</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Plan Builder -->
+<div class="modal-backdrop" id="planBuilderModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="font-size: 16px; font-weight: 800;">🛠️ Dựng Gói Kế Hoạch KPI Tháng</h3>
+      <button style="background: transparent; border: none; color: #94a3b8; font-size: 22px; cursor: pointer;" onclick="closePlanBuilderModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom: 14px;">
+        <label style="font-size: 12px; font-weight: 700; color: #94a3b8;">Kỳ tháng:</label>
+        <select id="modal-plan-month" class="form-control" style="width: 100%; margin-top: 4px;">
+          <option value="8" selected>Tháng 8 / 2026</option>
+          <option value="9">Tháng 9 / 2026</option>
+          <option value="7">Tháng 7 / 2026</option>
+        </select>
+      </div>
+      <div style="margin-bottom: 14px;">
+        <label style="font-size: 12px; font-weight: 700; color: #94a3b8;">Đường dẫn folder nguồn (Tùy chọn):</label>
+        <input type="text" id="modal-folder-path" class="form-control" style="width: 100%; margin-top: 4px;" placeholder="Để trống nếu muốn tự động quét trong folder tháng">
+      </div>
+      <div id="modal-builder-result" style="display: none; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; padding: 12px; color: #34d399; font-size: 13px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closePlanBuilderModal()">Đóng</button>
+      <button class="btn-action-primary" style="width: auto; padding: 10px 20px;" onclick="executeBuildPlan()">Dựng & Tải Kế Hoạch</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let currentMonth = 8;
+  let fileState = { projectBase64: null, hoadonBase64: null, trahangBase64: null };
+
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.className = isError ? 'toast error' : 'toast';
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 4500);
+  }
+
+  function onMonthChange() {
+    currentMonth = parseInt(document.getElementById('sel-month').value);
+    document.getElementById('modal-plan-month').value = currentMonth;
+    showToast(`Đã chuyển kỳ KPI sang Tháng ${currentMonth}/2026`);
+  }
+
+  function setupDropzones() {
+    const drops = [
+      { id: 'drop-project', inputId: 'file-project', type: 'project' },
+      { id: 'drop-hd', inputId: 'file-hd', type: 'hd' },
+      { id: 'drop-th', inputId: 'file-th', type: 'th' }
+    ];
+
+    drops.forEach(({ id, inputId, type }) => {
+      const el = document.getElementById(id);
+      const input = document.getElementById(inputId);
+      if (!el || !input) return;
+
+      el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag-over'); });
+      el.addEventListener('dragleave', () => { el.classList.remove('drag-over'); });
+      el.addEventListener('drop', (e) => {
+        e.preventDefault();
+        el.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) handleFileSelection(e.dataTransfer.files[0], type);
+      });
+      input.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) handleFileSelection(e.target.files[0], type);
+      });
+    });
+  }
+
+  function handleFileSelection(file, type) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64 = e.target.result.split(',')[1];
+      if (type === 'project') {
+        fileState.projectBase64 = base64;
+        document.getElementById('status-project').innerHTML = `<span style="color: #34d399; font-weight: 700;">✅ ${file.name}</span>`;
+        document.getElementById('drop-project').classList.add('has-file');
+      } else if (type === 'hd') {
+        fileState.hoadonBase64 = base64;
+        document.getElementById('status-hd').innerHTML = `<span style="color: #34d399; font-weight: 700;">✅ ${file.name}</span>`;
+        document.getElementById('drop-hd').classList.add('has-file');
+        showToast(`Đã nạp file hóa đơn: ${file.name}`);
+      } else if (type === 'th') {
+        fileState.trahangBase64 = base64;
+        document.getElementById('status-th').innerHTML = `<span style="color: #34d399; font-weight: 700;">✅ ${file.name}</span>`;
+        document.getElementById('drop-th').classList.add('has-file');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function executeKpiProcess() {
+    const btn = document.getElementById('btn-generate-kpi');
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳</span> Đang xử lý KPI...`;
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hoadon_base64: fileState.hoadonBase64,
+          trahang_base64: fileState.trahangBase64,
+          plan_base64: fileState.projectBase64,
+          month: currentMonth
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(`🎉 Tạo Báo Cáo KPI Tháng ${currentMonth} thành công!`);
+        const st = data.stats;
+        document.getElementById('lbl-kpi-rev').innerText = (st.total_revenue || 0).toLocaleString('vi-VN') + ' đ';
+        document.getElementById('lbl-kpi-tx').innerText = (st.total_invoices || 0).toLocaleString('vi-VN') + ' dòng';
+        document.getElementById('lbl-kpi-proj').innerText = (st.total_project_sales || 0).toLocaleString('vi-VN') + ' đ';
+        document.getElementById('lbl-kpi-rewarded').innerText = (st.staff_rewarded_count || 0) + ' Dược sĩ';
+        document.getElementById('btn-download-kpi').href = `/download?filename=${data.filename}`;
+        document.getElementById('kpi-result-box').style.display = 'block';
+      } else {
+        showToast(`Lỗi: ${data.error}`, true);
+      }
+    } catch (err) {
+      showToast(`Lỗi kết nối: ${err.message}`, true);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<span>⚡</span> XỬ LÝ & XUẤT BÁO CÁO KPI HOÀN THIỆN`;
+    }
+  }
+
+  function openPlanBuilderModal() { document.getElementById('planBuilderModal').style.display = 'flex'; }
+  function closePlanBuilderModal() { document.getElementById('planBuilderModal').style.display = 'none'; }
+
+  async function executeBuildPlan() {
+    const m = parseInt(document.getElementById('modal-plan-month').value);
+    const folder = document.getElementById('modal-folder-path').value.trim();
+    try {
+      const res = await fetch('/api/build-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ month: m, folder_path: folder || null })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fileState.projectBase64 = data.plan_base64;
+        const resDiv = document.getElementById('modal-builder-result');
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `<div>✅ ${data.message}</div><a href="/download-plan?filename=${data.filename}" style="color: #38bdf8; font-weight: 700; margin-top: 6px; display: inline-block;">⬇️ Tải file kế hoạch</a>`;
+        showToast('Dựng kế hoạch thành công!');
+      } else {
+        showToast(`Lỗi: ${data.error}`, true);
+      }
+    } catch (e) {
+      showToast(`Lỗi: ${e.message}`, true);
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', setupDropzones);
+</script>
+</body>
+</html>

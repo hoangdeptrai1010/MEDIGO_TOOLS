@@ -1,0 +1,100 @@
+{
+  "mini_projects": [
+    {
+      "id": "kat",
+      "name": "Mini KAT (Organika)",
+      "regions": {
+        "HN": {
+          "skus": ["SP2725289", "SP2725285", "SP2725291", "SP2725287", "SP2725353", "SP2725351"],
+          "individual_tiers": [
+            {"gate_on": "qty", "min": 15, "reward": {"type": "per_unit", "basis": "qty", "rate": 25000}, "label": "Đạt 15 hộp"},
+            {"gate_on": "qty", "min": 17, "reward": {"type": "per_unit", "basis": "qty", "rate": 30000}, "label": "Đạt 17 hộp"}
+          ],
+          "store_tiers": [
+            {"gate_on": "qty", "min": 17, "min_distinct_sku": 3, "reward": {"type": "flat", "rate": 300000}, "label": "NT đạt 17 hộp / >=3 mã"},
+            {"gate_on": "qty", "min": 30, "min_distinct_sku": 3, "reward": {"type": "flat", "rate": 400000}, "label": "NT đạt 30 hộp / >=3 mã"}
+          ]
+        },
+        "HCM": {
+          "skus": ["SP2725289", "SP2725285", "SP2725291", "SP2725287", "SP2725353", "SP2725351"],
+          "individual_tiers": [
+            {"gate_on": "qty", "min": 7, "reward": {"type": "per_unit", "basis": "qty", "rate": 25000}, "label": "Đạt 7 hộp"},
+            {"gate_on": "qty", "min": 10, "reward": {"type": "per_unit", "basis": "qty", "rate": 30000}, "label": "Đạt 10 hộp"}
+          ],
+          "store_tiers": [
+            {"gate_on": "qty", "min": 17, "min_distinct_sku": 3, "reward": {"type": "flat", "rate": 300000}, "label": "NT đạt 17 hộp / >=3 mã"},
+            {"gate_on": "qty", "min": 30, "min_distinct_sku": 3, "reward": {"type": "flat", "rate": 400000}, "label": "NT đạt 30 hộp / >=3 mã"}
+          ]
+        }
+      }
+    },
+    {
+      "id": "party_smart",
+      "name": "Party Smart (Giải rượu Himalaya)",
+      "regions": {
+        "HN": {
+          "skus": ["SP017162"],
+          "individual_tiers": [
+            {"gate_on": "qty", "min": 80, "reward": {"type": "per_unit", "basis": "qty", "rate": 6000}, "label": "Đạt 80 hộp"}
+          ],
+          "store_tiers": [
+            {"gate_on": "qty", "min": 180, "reward": {"type": "flat", "rate": 300000}, "label": "NT đạt 180 hộp"}
+          ]
+        },
+        "HCM": {
+          "skus": ["SP017162"],
+          "individual_tiers": [
+            {"gate_on": "qty", "min": 80, "reward": {"type": "per_unit", "basis": "qty", "rate": 6000}, "label": "Đạt 80 hộp"}
+          ],
+          "store_tiers": [
+            {"gate_on": "qty", "min": 180, "reward": {"type": "flat", "rate": 300000}, "label": "NT đạt 180 hộp"}
+          ]
+        }
+      }
+    },
+    {
+      "id": "ladycare",
+      "name": "Ladycare (Bọt vệ sinh)",
+      "regions": {
+        "HN": {
+          "skus": ["SP2723124", "SP2723125", "SP2723127"],
+          "individual_tiers": [
+            {"gate_on": "revenue", "min": 5000000, "reward": {"type": "percent", "basis": "revenue", "rate": 0.04}, "label": ">5tr"},
+            {"gate_on": "revenue", "min": 7000000, "reward": {"type": "percent", "basis": "revenue", "rate": 0.06}, "label": ">7tr"}
+          ],
+          "store_tiers": [
+            {"gate_on": "revenue", "min": 22000000, "reward": {"type": "flat", "rate": 500000}, "label": "NT >22tr"},
+            {"gate_on": "revenue", "min": 30000000, "reward": {"type": "flat", "rate": 700000}, "label": "NT >30tr"}
+          ]
+        },
+        "HCM": {
+          "skus": ["SP2723124", "SP2723125", "SP2723127"],
+          "individual_tiers": [
+            {"gate_on": "revenue", "min": 3000000, "reward": {"type": "percent", "basis": "revenue", "rate": 0.03}, "label": ">3tr"},
+            {"gate_on": "revenue", "min": 5000000, "reward": {"type": "percent", "basis": "revenue", "rate": 0.04}, "label": ">5tr"},
+            {"gate_on": "revenue", "min": 7000000, "reward": {"type": "percent", "basis": "revenue", "rate": 0.06}, "label": ">7tr"}
+          ],
+          "store_tiers": [
+            {"gate_on": "revenue", "min": 15000000, "reward": {"type": "flat", "rate": 200000}, "label": "NT >15tr"},
+            {"gate_on": "revenue", "min": 22000000, "reward": {"type": "flat", "rate": 500000}, "label": "NT >22tr"},
+            {"gate_on": "revenue", "min": 30000000, "reward": {"type": "flat", "rate": 700000}, "label": "NT >30tr"}
+          ]
+        }
+      }
+    },
+    {
+      "id": "avc",
+      "name": "AVC (Chất xơ, trùng thảo) - chỉ Hà Nội",
+      "regions": {
+        "HN": {
+          "skus": ["SP2723883", "SP2722826", "SP2722817", "SP2725666"],
+          "individual_tiers": [
+            {"gate_on": "revenue", "min": 7000000, "reward": {"type": "per_unit", "basis": "qty", "rate": 4000}, "label": "Doanh thu nhãn hàng >7tr"},
+            {"gate_on": "revenue", "min": 9000000, "reward": {"type": "per_unit", "basis": "qty", "rate": 6000}, "label": "Doanh thu nhãn hàng >9tr"}
+          ],
+          "store_tiers": []
+        }
+      }
+    }
+  ]
+}

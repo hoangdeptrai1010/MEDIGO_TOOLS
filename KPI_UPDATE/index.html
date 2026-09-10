@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medigo Pharmacy - Hệ Thống Điều Hành KPI & Bảng Lương Nhà Thuốc</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #090d16;
+      --bg-card: #111827;
+      --bg-card-hover: #172033;
+      --bg-panel-kpi: #0e172a;
+      --bg-panel-payroll: #0f172a;
+      --border-color: #1f293d;
+      --border-focus: #3b82f6;
+      
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --kpi-cyan: #06b6d4;
+      --kpi-blue: #3b82f6;
+      --payroll-emerald: #10b981;
+      --payroll-purple: #8b5cf6;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      line-height: 1.5;
+      padding-bottom: 60px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1720px;
+      margin: 0 auto;
+      padding: 16px 24px;
+    }
+
+    /* Top Navigation Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+    }
+
+    .brand-text h1 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* View Switcher */
+    .view-switcher {
+      display: flex;
+      background: #090e1a;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .view-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .view-btn.active {
+      background: #1e293b;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      border: 1px solid var(--border-color);
+      color: #cbd5e1;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #334155;
+      border-color: #475569;
+      color: #fff;
+    }
+
+    .btn-builder-highlight {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(6, 182, 212, 0.2));
+      border: 1px solid rgba(139, 92, 246, 0.5);
+      color: #c084fc;
+      font-weight: 700;
+    }
+
+    .btn-builder-highlight:hover {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(6, 182, 212, 0.35));
+      border-color: #c084fc;
+      color: #fff;
+    }
+
+    /* ========================================================================= */
+    /* DUAL WORKSPACE LAYOUT (2 BÊN CÂN ĐỐI) */
+    /* ========================================================================= */
+    .dual-workspace-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 1200px) {
+      .dual-workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .tool-column {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 22px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    }
+
+    .tool-column.kpi-theme {
+      border-top: 4px solid var(--kpi-cyan);
+    }
+
+    .tool-column.payroll-theme {
+      border-top: 4px solid var(--payroll-purple);
+    }
+
+    /* Column Header */
+    .tool-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tool-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tool-badge-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .kpi-theme .tool-badge-icon {
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+    }
+
+    .payroll-theme .tool-badge-icon {
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+    }
+
+    .tool-title-wrap h2 {
+      font-size: 16px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+
+    .tool-title-wrap p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .tool-status-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Workflow Step Cards inside each tool */
+    .tool-step-block {
+      background: #0b1120;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      position: relative;
+    }
+
+    .tool-step-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .tool-step-num {
+      background: #1e293b;
+      color: #94a3b8;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      margin-right: 8px;
+    }
+
+    /* Dropzone Styling */
+    .dropzone-compact {
+      background: #080d1a;
+      border: 1.5px dashed #233052;
+      border-radius: 10px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .dropzone-compact:hover, .dropzone-compact.drag-over {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.05);
+      transform: translateY(-1px);
+    }
+
+    .dropzone-compact.has-file {
+      border-color: var(--payroll-emerald);
+      background: rgba(16, 185, 129, 0.04);
+      border-style: solid;
+    }
+
+    .dropzone-icon-mini {
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+
+    .dropzone-title-mini {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 2px;
+    }
+
+    .dropzone-desc-mini {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .file-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(148, 163, 184, 0.1);
+      border: 1px solid #334155;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #cbd5e1;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-badge-pill.success {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      font-weight: 600;
+    }
+
+    /* Buttons */
+    .btn-action-primary {
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    }
+
+    .btn-kpi-run {
+      background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+      color: #fff;
+    }
+
+    .btn-kpi-run:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(6, 182, 212, 0.4);
+    }
+
+    .btn-payroll-run {
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      color: #fff;
+    }
+
+    .btn-payroll-run:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(168, 85, 247, 0.4);
+    }
+
+    .btn-action-primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-download-pill {
+      background: #111d33;
+      border: 1px solid var(--payroll-emerald);
+      color: #34d399;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-download-pill:hover {
+      background: rgba(16, 185, 129, 0.2);
+      color: #fff;
+    }
+
+    .btn-link-payroll {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(16, 185, 129, 0.2));
+      border: 1px solid rgba(139, 92, 246, 0.5);
+      color: #c084fc;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-link-payroll:hover {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(16, 185, 129, 0.35));
+      color: #fff;
+    }
+
+    /* Live Output Results Area */
+    .result-box-wrapper {
+      background: #070c18;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stats-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat-chip-card {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .stat-chip-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .stat-chip-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+
+    /* Mini Table */
+    .mini-table-box {
+      max-height: 240px;
+      overflow-y: auto;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .mini-table th {
+      background: #0b1120;
+      color: #94a3b8;
+      padding: 8px 10px;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .mini-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+      color: #e2e8f0;
+    }
+
+    .mini-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Form controls */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .form-group label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      background: #0a0f1d;
+      border: 1px solid var(--border-color);
+      color: #f1f5f9;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--border-focus);
+    }
+
+    /* Modal Backdrop */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: #111827;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 960px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
+
+    .modal-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-body {
+      padding: 22px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .btn-close:hover { color: #fff; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      border-left: 4px solid var(--payroll-emerald);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 10000;
+      animation: slideIn 0.3s forwards;
+    }
+
+    .toast.error { border-left-color: var(--accent-red); }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Top Navigation Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo">⚡</div>
+      <div class="brand-text">
+        <h1>MEDIGO OPERATIONS CONTROL CENTER</h1>
+        <p>Hệ thống Song Song: Tool Tạo Báo Cáo KPI & Tool Tự Động Hóa Bảng Lương</p>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <!-- View mode switcher -->
+      <div class="view-switcher">
+        <button class="view-btn active" id="btn-view-dual" onclick="switchViewMode('dual')">
+          <span>⚡</span> Song Song (2 Tool)
+        </button>
+        <button class="view-btn" id="btn-view-kpi" onclick="switchViewMode('kpi')">
+          <span>🎯</span> Chỉ Tool KPI
+        </button>
+        <button class="view-btn" id="btn-view-payroll" onclick="switchViewMode('payroll')">
+          <span>💰</span> Chỉ Tool Bảng Lương
+        </button>
+      </div>
+
+      <button class="btn-secondary btn-builder-highlight" onclick="openPlanBuilderModal()">
+        <span>🛠️</span> Dựng Kế Hoạch & Dự Án
+      </button>
+
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <label style="font-size: 11px; font-weight: 700; color: #94a3b8;">KỲ BÁO CÁO:</label>
+        <select id="sel-month" class="form-control" style="padding: 6px 10px; width: 135px;" onchange="onMonthChange()">
+          <option value="8" selected>Tháng 8 / 2026</option>
+          <option value="9">Tháng 9 / 2026</option>
+          <option value="7">Tháng 7 / 2026</option>
+          <option value="6">Tháng 6 / 2026</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- DUAL WORKSPACE: 2 BÊN CÂN ĐỐI (KPI TRÁI - BẢNG LƯƠNG PHẢI) -->
+  <!-- ========================================================================= -->
+  <div class="dual-workspace-grid" id="main-dual-grid">
+
+    <!-- ======================================================================= -->
+    <!-- BÊN TRÁI: TOOL 1 - TẠO BÁO CÁO KPI & DỰ ÁN NHÀ THUỐC -->
+    <!-- ======================================================================= -->
+    <div class="tool-column kpi-theme" id="col-tool-kpi">
+      <div class="tool-header">
+        <div class="tool-title-wrap">
+          <div class="tool-badge-icon">🎯</div>
+          <div>
+            <h2>TOOL 1: TẠO BÁO CÁO KPI & DỰ ÁN</h2>
+            <p>Phân tích dự án, quét hóa đơn & chia theo từng Sheet chi nhánh</p>
+          </div>
+        </div>
+        <span class="tool-status-pill" id="badge-kpi-status" style="background: rgba(6,182,212,0.15); color: #22d3ee; border: 1px solid rgba(6,182,212,0.3);">
+          Sẵn sàng
+        </span>
+      </div>
+
+      <!-- KPI Step 1: Kế hoạch Dự Án -->
+      <div class="tool-step-block">
+        <div class="tool-step-title">
+          <div><span class="tool-step-num">1</span> <span>File Kế Hoạch / Dự Án KPI (.xlsx)</span></div>
+          <button class="btn-secondary" style="font-size: 11px; padding: 3px 8px;" onclick="openPlanBuilderModal()">
+            <span>➕</span> Tự dựng kế hoạch
+          </button>
+        </div>
+        <div class="dropzone-compact" id="drop-project" onclick="document.getElementById('file-project').click()">
+          <input type="file" id="file-project" accept=".xlsx,.xls" style="display: none;">
+          <div class="dropzone-icon-mini">📊</div>
+          <div class="dropzone-title-mini">Kéo thả File Kế Hoạch / Dự Án KPI</div>
+          <div class="dropzone-desc-mini">File <code>KeHoachKPI_2026-xx.xlsx</code> để phát hiện danh sách Sheet & SKUs</div>
+          <div id="status-project">
+            <span class="file-badge-pill">Chưa nạp (Dùng mặc định hoặc tải lên)</span>
+          </div>
+        </div>
+
+        <!-- Quick Project Inspection Preview -->
+        <div id="project-preview-area" style="display: none; margin-top: 10px; background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.25); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 12px; font-weight: 700; color: #38bdf8; display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span id="prev-store-count">0 Chi nhánh</span>
+            <span id="prev-staff-count">0 Dược sĩ</span>
+            <span id="prev-sku-count">0 SKUs Dự Án</span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8;" id="prev-expected-sheets">
+            Sẽ tạo: kpi dược sĩ, kpi nhà thuốc, Dự án, Hot Bill, data...
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Step 2: Hóa Đơn & Trả Hàng -->
+      <div class="tool-step-block">
+        <div class="tool-step-title">
+          <div><span class="tool-step-num">2</span> <span>Nạp Hóa Đơn & Trả Hàng KiotViet</span></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="dropzone-compact" id="drop-hd" onclick="document.getElementById('file-hd').click()">
+            <input type="file" id="file-hd" accept=".xlsx,.xls" style="display: none;">
+            <div class="dropzone-icon-mini">🧾</div>
+            <div class="dropzone-title-mini">File Hóa Đơn</div>
+            <div class="dropzone-desc-mini"><code>DanhSachChiTietHoaDon_...xlsx</code></div>
+            <div id="status-hd"><span class="file-badge-pill">Chưa chọn</span></div>
+          </div>
+
+          <div class="dropzone-compact" id="drop-th" onclick="document.getElementById('file-th').click()">
+            <input type="file" id="file-th" accept=".xlsx,.xls" style="display: none;">
+            <div class="dropzone-icon-mini">↩️</div>
+            <div class="dropzone-title-mini">File Trả Hàng</div>
+            <div class="dropzone-desc-mini"><code>DanhSachChiTietTraHang_...xlsx</code></div>
+            <div id="status-th"><span class="file-badge-pill">Tùy chọn</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Action Button -->
+      <button class="btn-action-primary btn-kpi-run" id="btn-generate-kpi" onclick="executeKpiProcess()">
+        <span>⚡</span> XỬ LÝ & XUẤT BÁO CÁO KPI
+      </button>
+
+      <!-- KPI Result Summary Box -->
+      <div class="result-box-wrapper" id="kpi-result-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 8px;">
+          <div style="font-size: 13px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+            <span>✅</span> ĐÃ TẠO XONG BÁO CÁO KPI
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <a class="btn-download-pill" id="btn-download-kpi" href="/download" download="baocaokpi_hoanthien.xlsx">
+              <span>⬇️</span> Tải File KPI (.xlsx)
+            </a>
+          </div>
+        </div>
+
+        <div class="stats-summary-grid">
+          <div class="stat-chip-card">
+            <div class="stat-chip-label">Tổng Doanh Thu Hóa Đơn</div>
+            <div class="stat-chip-val" id="lbl-kpi-rev">0 đ</div>
+          </div>
+          <div class="stat-chip-card">
+            <div class="stat-chip-label">Số Lượng Giao Dịch</div>
+            <div class="stat-chip-val" id="lbl-kpi-tx">0 dòng</div>
+          </div>
+          <div class="stat-chip-card">
+            <div class="stat-chip-label">Doanh Số Dự Án (CK/Combo)</div>
+            <div class="stat-chip-val" id="lbl-kpi-proj">0 đ</div>
+          </div>
+          <div class="stat-chip-card">
+            <div class="stat-chip-label">Số Dược Sĩ Được Thưởng</div>
+            <div class="stat-chip-val" id="lbl-kpi-rewarded">0 DS</div>
+          </div>
+        </div>
+
+        <!-- 1-Click Pipe to Payroll Tool -->
+        <div style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <div style="font-size: 12px; color: #cbd5e1;">
+            <span>💡</span> <strong>Sẵn sàng chuyển số liệu sang Bảng Lương:</strong>
+          </div>
+          <button class="btn-link-payroll" onclick="pipeKpiToPayroll()">
+            <span>🔗</span> Đẩy Số Liệu Sang Bảng Lương &rarr;
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ======================================================================= -->
+    <!-- BÊN PHẢI: TOOL 2 - TỰ ĐỘNG HÓA BẢNG LƯƠNG & CHẤM CÔNG -->
+    <!-- ======================================================================= -->
+    <div class="tool-column payroll-theme" id="col-tool-payroll">
+      <div class="tool-header">
+        <div class="tool-title-wrap">
+          <div class="tool-badge-icon">💰</div>
+          <div>
+            <h2>TOOL 2: TỰ ĐỘNG HÓA BẢNG LƯƠNG</h2>
+            <p>Bóc tách chấm công, giờ ca đêm, tăng ca OT & tính trọn vẹn lương</p>
+          </div>
+        </div>
+        <span class="tool-status-pill" id="badge-payroll-status" style="background: rgba(139,92,246,0.15); color: #c084fc; border: 1px solid rgba(139,92,246,0.3);">
+          Sẵn sàng
+        </span>
+      </div>
+
+      <!-- Payroll Step 1: File Chấm Công -->
+      <div class="tool-step-block">
+        <div class="tool-step-title">
+          <div><span class="tool-step-num">1</span> <span>File Chi Tiết Chấm Công Máy Vân Tay (.xlsx)</span></div>
+        </div>
+        <div class="dropzone-compact" id="drop-timecard" onclick="document.getElementById('file-timecard').click()">
+          <input type="file" id="file-timecard" accept=".xlsx,.xls" style="display: none;">
+          <div class="dropzone-icon-mini">⏱️</div>
+          <div class="dropzone-title-mini">Kéo thả File Chấm Công Chi Tiết</div>
+          <div class="dropzone-desc-mini">File <code>BangChiTietChamCong_thangX.xlsx</code> (Quét giờ ca ngày, ca đêm, quẹt thẻ)</div>
+          <div id="status-timecard">
+            <span class="file-badge-pill">Chưa chọn (Dùng mặc định hoặc tải lên)</span>
+          </div>
+        </div>
+
+        <!-- Quick Timecard Inspection Preview -->
+        <div id="timecard-preview-area" style="display: none; margin-top: 10px; background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.25); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 12px; font-weight: 700; color: #c084fc; display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span id="prev-tc-staff">0 Nhân viên</span>
+            <span id="prev-tc-night">0 Ca đêm</span>
+            <span id="prev-tc-shifts">0 Dòng ca</span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8;" id="prev-tc-branches">
+            Chi nhánh: Đỗ Quang Đẩu, Minh Châu, Nam Hòa, Rạch Bùng Binh, Lê Bình...
+          </div>
+        </div>
+      </div>
+
+      <!-- Payroll Step 2: Nguồn KPI & Dữ liệu Bán hàng -->
+      <div class="tool-step-block">
+        <div class="tool-step-title">
+          <div><span class="tool-step-num">2</span> <span>Nguồn Dữ Liệu KPI & Bán Hàng</span></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <!-- Nguồn KPI -->
+          <div class="dropzone-compact" id="drop-kpi-src" onclick="document.getElementById('file-kpi-src').click()">
+            <input type="file" id="file-kpi-src" accept=".xlsx,.xls" style="display: none;">
+            <div class="dropzone-icon-mini">📈</div>
+            <div class="dropzone-title-mini">File Báo Cáo KPI</div>
+            <div class="dropzone-desc-mini">Tự động lấy từ Tool 1 hoặc kéo thả</div>
+            <div id="status-kpi-src"><span class="file-badge-pill" id="lbl-kpi-source-badge">Tự động liên kết Tool 1</span></div>
+          </div>
+
+          <!-- Template Bảng lương -->
+          <div class="dropzone-compact" id="drop-payroll-tmpl" onclick="document.getElementById('file-payroll-tmpl').click()">
+            <input type="file" id="file-payroll-tmpl" accept=".xlsx,.xls" style="display: none;">
+            <div class="dropzone-icon-mini">📑</div>
+            <div class="dropzone-title-mini">Template Bảng Lương</div>
+            <div class="dropzone-desc-mini">Mẫu chuẩn 70 dòng công thức sạch</div>
+            <div id="status-payroll-tmpl"><span class="file-badge-pill">Mẫu chuẩn hệ thống</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payroll Action Button -->
+      <button class="btn-action-primary btn-payroll-run" id="btn-generate-payroll" onclick="executePayrollProcess()">
+        <span>💼</span> TÍNH TOÁN & XUẤT BẢNG LƯƠNG HOÀN THIỆN
+      </button>
+
+      <!-- Payroll Result Summary Box -->
+      <div class="result-box-wrapper" id="payroll-result-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 8px;">
+          <div style="font-size: 13px; font-weight: 800; color: #a78bfa; display: flex; align-items: center; gap: 6px;">
+            <span>✅</span> ĐÃ TẠO BẢNG LƯƠNG HOÀN THIỆN
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <a class="btn-download-pill" id="btn-download-payroll" href="/download-payroll" download="BANGLUONG_hoanthien.xlsx">
+              <span>⬇️</span> Tải Bảng Lương (.xlsx)
+            </a>
+          </div>
+        </div>
+
+        <div class="stats-summary-grid">
+          <div class="stat-chip-card">
+            <div class="stat-chip-label">Tổng Giờ Ca Ngày</div>
+            <div class="stat-chip-val" id="lbl-pr-dayhrs">0h</div>
+          </div>
+          <div class="stat-chip-card">
+            <div class="stat-chip-label">Tổng Giờ Ca Đêm (30 ca/tháng)</div>
+            <div class="stat-chip-val" id="lbl-pr-nighthrs">0h</div>
+          </div>
+          <div class="stat-chip-card">
+            <div class="stat-chip-label">Phụ Cấp Sức Khỏe Ca Đêm</div>
+            <div class="stat-chip-val" id="lbl-pr-nightallow">0 đ</div>
+          </div>
+          <div class="stat-chip-card">
+            <div class="stat-chip-label">Tổng Thưởng KPI & Dự Án</div>
+            <div class="stat-chip-val" id="lbl-pr-rewards">0 đ</div>
+          </div>
+        </div>
+
+        <!-- Preview Top Staff Table -->
+        <div style="font-size: 12px; font-weight: 700; color: #cbd5e1; margin-top: 8px; margin-bottom: 4px;">
+          👥 Xem trước một số dòng nhân sự:
+        </div>
+        <div class="mini-table-box">
+          <table class="mini-table">
+            <thead>
+              <tr>
+                <th>Nhân viên</th>
+                <th>Chi nhánh</th>
+                <th>Vị trí</th>
+                <th>Giờ ngày</th>
+                <th>Giờ đêm</th>
+                <th>Ca đêm</th>
+                <th>Thưởng KPI</th>
+                <th>Thưởng CK</th>
+              </tr>
+            </thead>
+            <tbody id="payroll-staff-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: DỰNG GÓI KẾ HOẠCH & DỰ ÁN THÁNG (GIỮ NGUYÊN TOÀN DIỆN TÍNH NĂNG) -->
+<!-- ========================================================================= -->
+<div class="modal-backdrop" id="planBuilderModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><span>🛠️</span> Dựng Gói Kế Hoạch & Dự Án KPI Tháng</h3>
+      <button class="btn-close" onclick="closePlanBuilderModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 14px; margin-bottom: 20px; font-size: 13px; color: #93c5fd;">
+        <span>💡</span> <strong>Nguyên lý hoạt động:</strong> Hệ thống tự động quét folder chi nhánh hoặc file bạn tải lên để tổng hợp thành 1 file <code>KeHoachKPI_2026-xx.xlsx</code> chuẩn gồm:
+        <code>KPI nhà thuốc</code>, <code>Nhân sự</code>, <code>Danh mục dự án (CK/Combo)</code>, <code>Quy tắc thưởng</code>.
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div class="form-group">
+          <label>Kỳ tháng kế hoạch:</label>
+          <select id="modal-plan-month" class="form-control">
+            <option value="8" selected>Tháng 8 / 2026</option>
+            <option value="9">Tháng 9 / 2026</option>
+            <option value="7">Tháng 7 / 2026</option>
+            <option value="6">Tháng 6 / 2026</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Đường dẫn thư mục nguồn (Tùy chọn):</label>
+          <input type="text" id="modal-folder-path" class="form-control" placeholder="Để trống nếu muốn hệ thống tự tìm trong thư mục tháng">
+        </div>
+      </div>
+
+      <!-- Thêm chương trình thưởng bổ sung giữa tháng -->
+      <div style="background: #090e1a; border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="font-size: 13px; font-weight: 700; color: #f8fafc;">
+            <span>🎁</span> Thêm Chương Trình Thưởng Bổ Sung Giữa Tháng (Hot Bill / Dự Án Mới)
+          </div>
+          <button class="btn-secondary" style="font-size: 11px; padding: 4px 10px;" onclick="addExtraProgramRow()">
+            <span>➕</span> Thêm chương trình
+          </button>
+        </div>
+        
+        <div id="extra-programs-container" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Sample Program Row -->
+          <div class="extra-program-item" style="background: #131c31; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr auto; gap: 10px; align-items: center;">
+            <input type="text" class="form-control prog-name" placeholder="Tên chương trình (VD: Hot Bill Hà Nội)" value="Hot Bill Hà Nội (15-31/8)">
+            <input type="text" class="form-control prog-rule" placeholder="Quy tắc (VD: Đơn >= 250k)" value="Đơn từ 250.000 đ">
+            <input type="number" class="form-control prog-reward" placeholder="Mức thưởng (VNĐ)" value="10000">
+            <select class="form-control prog-region">
+              <option value="ALL">Toàn quốc</option>
+              <option value="HN" selected>Chỉ Hà Nội</option>
+              <option value="HCM">Chỉ HCM</option>
+            </select>
+            <button style="background: transparent; border: none; color: #ef4444; font-size: 18px; cursor: pointer;" onclick="this.parentElement.remove()">&times;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result message -->
+      <div id="modal-builder-result" style="display: none; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; padding: 14px; color: #34d399; font-size: 13px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closePlanBuilderModal()">Đóng</button>
+      <button class="btn-action-primary btn-kpi-run" style="width: auto; padding: 10px 22px;" id="btn-run-plan-builder" onclick="executeBuildPlan()">
+        <span>🛠️</span> DỰNG & TẢI FILE KẾ HOẠCH
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT APP LOGIC -->
+<!-- ========================================================================= -->
+<script>
+  // State variables
+  let currentMonth = 8;
+  let fileState = {
+    // KPI Files
+    projectBase64: null,
+    projectFilename: null,
+    projectInspection: null,
+    hoadonBase64: null,
+    hoadonFilename: null,
+    trahangBase64: null,
+    trahangFilename: null,
+    
+    // Payroll Files
+    timecardBase64: null,
+    timecardFilename: null,
+    timecardInspection: null,
+    kpiSourceBase64: null,
+    kpiSourceFilename: null,
+    payrollTemplateBase64: null,
+    payrollTemplateFilename: null
+  };
+
+  // Switch View Mode (Dual, KPI Only, Payroll Only)
+  function switchViewMode(mode) {
+    const colKpi = document.getElementById('col-tool-kpi');
+    const colPayroll = document.getElementById('col-tool-payroll');
+    const grid = document.getElementById('main-dual-grid');
+    
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    
+    if (mode === 'dual') {
+      document.getElementById('btn-view-dual').classList.add('active');
+      grid.style.gridTemplateColumns = '1fr 1fr';
+      colKpi.style.display = 'flex';
+      colPayroll.style.display = 'flex';
+    } else if (mode === 'kpi') {
+      document.getElementById('btn-view-kpi').classList.add('active');
+      grid.style.gridTemplateColumns = '1fr';
+      colKpi.style.display = 'flex';
+      colPayroll.style.display = 'none';
+    } else if (mode === 'payroll') {
+      document.getElementById('btn-view-payroll').classList.add('active');
+      grid.style.gridTemplateColumns = '1fr';
+      colKpi.style.display = 'none';
+      colPayroll.style.display = 'flex';
+    }
+  }
+
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.className = isError ? 'toast error' : 'toast';
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 4500);
+  }
+
+  function onMonthChange() {
+    currentMonth = parseInt(document.getElementById('sel-month').value);
+    document.getElementById('modal-plan-month').value = currentMonth;
+    showToast(`Đã chuyển kỳ báo cáo sang Tháng ${currentMonth}/2026`);
+  }
+
+  // Setup Drag & Drop Handlers
+  function setupDropzones() {
+    const drops = [
+      { id: 'drop-project', inputId: 'file-project', type: 'project' },
+      { id: 'drop-hd', inputId: 'file-hd', type: 'hd' },
+      { id: 'drop-th', inputId: 'file-th', type: 'th' },
+      { id: 'drop-timecard', inputId: 'file-timecard', type: 'timecard' },
+      { id: 'drop-kpi-src', inputId: 'file-kpi-src', type: 'kpi-src' },
+      { id: 'drop-payroll-tmpl', inputId: 'file-payroll-tmpl', type: 'payroll-tmpl' },
+    ];
+
+    drops.forEach(({ id, inputId, type }) => {
+      const el = document.getElementById(id);
+      const input = document.getElementById(inputId);
+      if (!el || !input) return;
+
+      el.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        el.classList.add('drag-over');
+      });
+
+      el.addEventListener('dragleave', () => {
+        el.classList.remove('drag-over');
+      });
+
+      el.addEventListener('drop', (e) => {
+        e.preventDefault();
+        el.classList.remove('drag-over');
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleFileSelection(e.dataTransfer.files[0], type);
+        }
+      });
+
+      input.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          handleFileSelection(e.target.files[0], type);
+        }
+      });
+    });
+  }
+
+  function handleFileSelection(file, type) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64 = e.target.result.split(',')[1];
+      
+      if (type === 'project') {
+        fileState.projectBase64 = base64;
+        fileState.projectFilename = file.name;
+        document.getElementById('status-project').innerHTML = `<span class="file-badge-pill success">✅ ${file.name} (${(file.size/1024).toFixed(0)} KB)</span>`;
+        document.getElementById('drop-project').classList.add('has-file');
+        inspectProjectFile(base64);
+      } else if (type === 'hd') {
+        fileState.hoadonBase64 = base64;
+        fileState.hoadonFilename = file.name;
+        document.getElementById('status-hd').innerHTML = `<span class="file-badge-pill success">✅ ${file.name}</span>`;
+        document.getElementById('drop-hd').classList.add('has-file');
+        showToast(`Đã nạp file hóa đơn: ${file.name}`);
+      } else if (type === 'th') {
+        fileState.trahangBase64 = base64;
+        fileState.trahangFilename = file.name;
+        document.getElementById('status-th').innerHTML = `<span class="file-badge-pill success">✅ ${file.name}</span>`;
+        document.getElementById('drop-th').classList.add('has-file');
+      } else if (type === 'timecard') {
+        fileState.timecardBase64 = base64;
+        fileState.timecardFilename = file.name;
+        document.getElementById('status-timecard').innerHTML = `<span class="file-badge-pill success">✅ ${file.name} (${(file.size/1024).toFixed(0)} KB)</span>`;
+        document.getElementById('drop-timecard').classList.add('has-file');
+        inspectTimecardFile(base64);
+      } else if (type === 'kpi-src') {
+        fileState.kpiSourceBase64 = base64;
+        fileState.kpiSourceFilename = file.name;
+        document.getElementById('status-kpi-src').innerHTML = `<span class="file-badge-pill success">✅ ${file.name}</span>`;
+        document.getElementById('drop-kpi-src').classList.add('has-file');
+      } else if (type === 'payroll-tmpl') {
+        fileState.payrollTemplateBase64 = base64;
+        fileState.payrollTemplateFilename = file.name;
+        document.getElementById('status-payroll-tmpl').innerHTML = `<span class="file-badge-pill success">✅ ${file.name}</span>`;
+        document.getElementById('drop-payroll-tmpl').classList.add('has-file');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Inspect Project File API
+  async function inspectProjectFile(base64) {
+    try {
+      const res = await fetch('/api/inspect-project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_base64: base64 })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fileState.projectInspection = data;
+        document.getElementById('prev-store-count').innerText = `${data.store_count} Chi nhánh`;
+        document.getElementById('prev-staff-count').innerText = `${data.total_staff} Dược sĩ`;
+        document.getElementById('prev-sku-count').innerText = `${data.project_skus_count} SKUs Dự Án`;
+        document.getElementById('project-preview-area').style.display = 'block';
+        showToast(`Nhận diện thành công ${data.store_count} chi nhánh và ${data.total_staff} nhân sự dự án!`);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // Inspect Timecard File API
+  async function inspectTimecardFile(base64) {
+    try {
+      const res = await fetch('/api/inspect-timecard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timecard_base64: base64 })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fileState.timecardInspection = data;
+        document.getElementById('prev-tc-staff').innerText = `${data.total_staff} Nhân viên`;
+        document.getElementById('prev-tc-night').innerText = `${data.night_shift_rows} Ca đêm`;
+        document.getElementById('prev-tc-shifts').innerText = `${data.total_shift_rows} Dòng ca`;
+        document.getElementById('timecard-preview-area').style.display = 'block';
+        showToast(`Nhận diện thành công file chấm công: ${data.total_staff} nhân sự, ${data.night_shift_rows} ca đêm!`);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // Execute KPI Engine (TOOL 1)
+  async function executeKpiProcess() {
+    const btn = document.getElementById('btn-generate-kpi');
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳</span> Đang xử lý & phân bổ KPI...`;
+
+    try {
+      const payload = {
+        hoadon_base64: fileState.hoadonBase64,
+        trahang_base64: fileState.trahangBase64,
+        plan_base64: fileState.projectBase64,
+        month: currentMonth
+      };
+
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(`🎉 Tạo Báo Cáo KPI Tháng ${currentMonth} thành công!`);
+        
+        // Display KPI Stats
+        const st = data.stats;
+        document.getElementById('lbl-kpi-rev').innerText = (st.total_revenue || 0).toLocaleString('vi-VN') + ' đ';
+        document.getElementById('lbl-kpi-tx').innerText = (st.total_invoices || 0).toLocaleString('vi-VN') + ' dòng';
+        document.getElementById('lbl-kpi-proj').innerText = (st.total_project_sales || 0).toLocaleString('vi-VN') + ' đ';
+        document.getElementById('lbl-kpi-rewarded').innerText = (st.staff_rewarded_count || 0) + ' Dược sĩ';
+        
+        document.getElementById('btn-download-kpi').href = `/download?filename=${data.filename}`;
+        document.getElementById('kpi-result-box').style.display = 'block';
+        
+        // Update status badge
+        document.getElementById('badge-kpi-status').innerHTML = 'Hoàn thành';
+        document.getElementById('badge-kpi-status').style.color = '#34d399';
+        document.getElementById('badge-kpi-status').style.borderColor = 'rgba(16,185,129,0.4)';
+      } else {
+        showToast(`Lỗi: ${data.error}`, true);
+      }
+    } catch (err) {
+      showToast(`Lỗi kết nối máy chủ: ${err.message}`, true);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<span>⚡</span> XỬ LÝ & XUẤT BÁO CÁO KPI`;
+    }
+  }
+
+  // Pipe KPI Result to Payroll Tool (TOOL 1 -> TOOL 2)
+  function pipeKpiToPayroll() {
+    document.getElementById('lbl-kpi-source-badge').innerText = `✅ Đã liên kết trực tiếp kết quả KPI Tháng ${currentMonth}`;
+    document.getElementById('lbl-kpi-source-badge').className = 'file-badge-pill success';
+    document.getElementById('drop-kpi-src').classList.add('has-file');
+    showToast(`Đã chuyển toàn bộ dữ liệu KPI Tháng ${currentMonth} sang Tool Bảng Lương!`);
+  }
+
+  // Execute Payroll Engine (TOOL 2)
+  async function executePayrollProcess() {
+    const btn = document.getElementById('btn-generate-payroll');
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳</span> Đang bóc tách chấm công & tính bảng lương...`;
+
+    try {
+      const payload = {
+        timecard_base64: fileState.timecardBase64,
+        kpi_base64: fileState.kpiSourceBase64,
+        hoadon_base64: fileState.hoadonBase64,
+        trahang_base64: fileState.trahangBase64,
+        template_base64: fileState.payrollTemplateBase64,
+        month: currentMonth
+      };
+
+      const res = await fetch('/api/generate-payroll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(`🎉 Tính toán Bảng Lương Tháng ${currentMonth} thành công!`);
+        
+        // Display Payroll Stats
+        const st = data.stats;
+        document.getElementById('lbl-pr-dayhrs').innerText = (st.total_day_hours || 0).toFixed(1) + 'h';
+        document.getElementById('lbl-pr-nighthrs').innerText = (st.total_night_hours || 0).toFixed(1) + `h (${st.total_night_shifts || 0} ca)`;
+        document.getElementById('lbl-pr-nightallow').innerText = (st.total_night_allowance || 0).toLocaleString('vi-VN') + ' đ';
+        document.getElementById('lbl-pr-rewards').innerText = ((st.total_kpi_reward || 0) + (st.total_ck_reward || 0) + (st.total_project_reward || 0)).toLocaleString('vi-VN') + ' đ';
+        
+        // Render Staff Sample
+        const tbody = document.getElementById('payroll-staff-tbody');
+        tbody.innerHTML = '';
+        if (st.staff_sample && st.staff_sample.length > 0) {
+          st.staff_sample.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><strong>${s.name}</strong></td>
+              <td>${s.branch}</td>
+              <td><span style="font-size: 11px; background: rgba(59,130,246,0.15); padding: 2px 6px; border-radius: 4px; color: #60a5fa;">${s.role}</span></td>
+              <td>${s.day_hrs.toFixed(1)}h</td>
+              <td>${s.night_hrs.toFixed(1)}h</td>
+              <td>${s.night_shifts} ca</td>
+              <td>${s.kpi_reward.toLocaleString('vi-VN')} đ</td>
+              <td>${s.ck_reward.toLocaleString('vi-VN')} đ</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+
+        document.getElementById('btn-download-payroll').href = `/download-payroll?filename=${data.filename}`;
+        document.getElementById('payroll-result-box').style.display = 'block';
+
+        // Update status badge
+        document.getElementById('badge-payroll-status').innerHTML = 'Hoàn thành';
+        document.getElementById('badge-payroll-status').style.color = '#34d399';
+        document.getElementById('badge-payroll-status').style.borderColor = 'rgba(16,185,129,0.4)';
+      } else {
+        showToast(`Lỗi: ${data.error}`, true);
+      }
+    } catch (err) {
+      showToast(`Lỗi kết nối máy chủ: ${err.message}`, true);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<span>💼</span> TÍNH TOÁN & XUẤT BẢNG LƯƠNG HOÀN THIỆN`;
+    }
+  }
+
+  // Plan Builder Modal Handlers
+  function openPlanBuilderModal() {
+    document.getElementById('planBuilderModal').style.display = 'flex';
+  }
+
+  function closePlanBuilderModal() {
+    document.getElementById('planBuilderModal').style.display = 'none';
+  }
+
+  function addExtraProgramRow() {
+    const container = document.getElementById('extra-programs-container');
+    const div = document.createElement('div');
+    div.className = 'extra-program-item';
+    div.style = 'background: #131c31; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr auto; gap: 10px; align-items: center;';
+    div.innerHTML = `
+      <input type="text" class="form-control prog-name" placeholder="Tên chương trình mới">
+      <input type="text" class="form-control prog-rule" placeholder="Quy tắc (VD: Đơn >= 200k)">
+      <input type="number" class="form-control prog-reward" placeholder="Mức thưởng (VNĐ)" value="10000">
+      <select class="form-control prog-region">
+        <option value="ALL">Toàn quốc</option>
+        <option value="HN">Chỉ Hà Nội</option>
+        <option value="HCM">Chỉ HCM</option>
+      </select>
+      <button style="background: transparent; border: none; color: #ef4444; font-size: 18px; cursor: pointer;" onclick="this.parentElement.remove()">&times;</button>
+    `;
+    container.appendChild(div);
+  }
+
+  async function executeBuildPlan() {
+    const btn = document.getElementById('btn-run-plan-builder');
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳</span> Đang dựng gói kế hoạch...`;
+
+    const m = parseInt(document.getElementById('modal-plan-month').value);
+    const folder = document.getElementById('modal-folder-path').value.trim();
+
+    // Parse extra programs
+    const extra_programs = [];
+    document.querySelectorAll('.extra-program-item').forEach(item => {
+      const name = item.querySelector('.prog-name').value.trim();
+      const rule = item.querySelector('.prog-rule').value.trim();
+      const reward = parseFloat(item.querySelector('.prog-reward').value) || 0;
+      const region = item.querySelector('.prog-region').value;
+      if (name) {
+        extra_programs.push({ name, rule, reward, region });
+      }
+    });
+
+    try {
+      const res = await fetch('/api/build-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          month: m,
+          folder_path: folder || null,
+          extra_programs: extra_programs
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        fileState.projectBase64 = data.plan_base64;
+        fileState.projectFilename = data.filename;
+        
+        const resDiv = document.getElementById('modal-builder-result');
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `
+          <div style="font-weight: 800; margin-bottom: 6px;">✅ ${data.message}</div>
+          <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px;">
+            Đã tổng hợp ${data.info.store_count} chi nhánh, ${data.info.staff_count} nhân sự, ${data.info.sku_count} SKUs dự án.
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <a href="/download-plan?filename=${data.filename}" class="btn-download-pill" style="font-size: 12px; padding: 6px 14px;" download>
+              <span>⬇️</span> Tải File Kế Hoạch (.xlsx)
+            </a>
+            <button class="btn-secondary" style="font-size: 12px; padding: 6px 14px;" onclick="applyBuiltPlanToTool('${data.filename}')">
+              <span>🚀</span> Nạp Luôn Vào Tool KPI
+            </button>
+          </div>
+        `;
+      } else {
+        showToast(`Lỗi dựng kế hoạch: ${data.error}`, true);
+      }
+    } catch (e) {
+      showToast(`Lỗi: ${e.message}`, true);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<span>🛠️</span> DỰNG & TẢI FILE KẾ HOẠCH`;
+    }
+  }
+
+  function applyBuiltPlanToTool(filename) {
+    document.getElementById('status-project').innerHTML = `<span class="file-badge-pill success">✅ ${filename} (Vừa dựng từ Tool)</span>`;
+    document.getElementById('drop-project').classList.add('has-file');
+    closePlanBuilderModal();
+    if (fileState.projectBase64) {
+      inspectProjectFile(fileState.projectBase64);
+    }
+    showToast(`Đã tự động nạp ${filename} vào Tool 1!`);
+  }
+
+  // Initialize
+  window.addEventListener('DOMContentLoaded', () => {
+    setupDropzones();
+  });
+</script>
+</body>
+</html>

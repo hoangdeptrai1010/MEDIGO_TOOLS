@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medigo - Tool Tự Động Hóa Bảng Lương & Chấm Công</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #090d16;
+      --bg-card: #111827;
+      --border-color: #1f293d;
+      --border-focus: #8b5cf6;
+      --payroll-purple: #8b5cf6;
+      --payroll-emerald: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 22px;
+      background: rgba(17, 24, 39, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
+    }
+
+    .brand-text h1 {
+      font-size: 19px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #c084fc, #a855f7, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      color: #f1f5f9;
+    }
+
+    .dropzone-card {
+      background: #080d1a;
+      border: 2px dashed #233052;
+      border-radius: 12px;
+      padding: 26px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .dropzone-card:hover, .dropzone-card.drag-over {
+      border-color: var(--payroll-purple);
+      background: rgba(139, 92, 246, 0.05);
+    }
+
+    .dropzone-card.has-file {
+      border-color: var(--payroll-emerald);
+      background: rgba(16, 185, 129, 0.04);
+      border-style: solid;
+    }
+
+    .btn-action-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 16px rgba(168, 85, 247, 0.35);
+      transition: all 0.25s;
+    }
+
+    .btn-action-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(168, 85, 247, 0.5);
+    }
+
+    .btn-action-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-download-pill {
+      background: #111d33;
+      border: 1px solid var(--payroll-emerald);
+      color: #34d399;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stats-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-chip-card {
+      background: #080d1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .stat-chip-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-chip-val { font-size: 18px; font-weight: 800; color: #f8fafc; }
+
+    .form-control {
+      background: #080d1a;
+      border: 1px solid var(--border-color);
+      color: #f1f5f9;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .mini-table-box {
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .mini-table th {
+      background: #080d1a;
+      color: #94a3b8;
+      padding: 10px 12px;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .mini-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+      color: #e2e8f0;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      border-left: 4px solid var(--payroll-emerald);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+      z-index: 10000;
+    }
+    .toast.error { border-left-color: var(--accent-red); }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo">💰</div>
+      <div class="brand-text">
+        <h1>MEDIGO - TOOL TỰ ĐỘNG HÓA BẢNG LƯƠNG & CHẤM CÔNG</h1>
+        <p>Bóc tách máy chấm công, tính giờ ngày, ca đêm, tăng ca OT & đồng bộ 100% công thức chuẩn</p>
+      </div>
+    </div>
+    
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <label style="font-size: 12px; font-weight: 700; color: #94a3b8;">KỲ LƯƠNG:</label>
+      <select id="sel-month" class="form-control" onchange="onMonthChange()">
+        <option value="8" selected>Tháng 8 / 2026</option>
+        <option value="9">Tháng 9 / 2026</option>
+        <option value="7">Tháng 7 / 2026</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Step 1: File Chấm Công -->
+  <div class="section-card">
+    <div class="section-title">
+      <span>1. File Chi Tiết Chấm Công Máy Vân Tay (.xlsx)</span>
+    </div>
+    <div class="dropzone-card" id="drop-timecard" onclick="document.getElementById('file-timecard').click()">
+      <input type="file" id="file-timecard" accept=".xlsx,.xls" style="display: none;">
+      <div style="font-size: 28px; margin-bottom: 6px;">⏱️</div>
+      <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Kéo thả File Chấm Công Chi Tiết vào đây</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">File <code>BangChiTietChamCong_thangX.xlsx</code> từ máy chấm công vân tay</div>
+      <div id="status-timecard"><span style="color: #94a3b8; font-size: 12px;">Chưa chọn (Hệ thống sẽ quét file mặc định trong thư mục tháng)</span></div>
+    </div>
+  </div>
+
+  <!-- Step 2: Các file bổ trợ -->
+  <div class="section-card">
+    <div class="section-title">
+      <span>2. Nguồn Dữ Liệu KPI & Hóa Đơn (Tự động hoặc Tải lên)</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <!-- Báo cáo KPI -->
+      <div class="dropzone-card" id="drop-kpi" onclick="document.getElementById('file-kpi').click()">
+        <input type="file" id="file-kpi" accept=".xlsx,.xls" style="display: none;">
+        <div style="font-size: 28px; margin-bottom: 6px;">📈</div>
+        <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">File Báo Cáo KPI Hoàn Thiện</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;"><code>baocaokpi_thangX_hoanthien.xlsx</code></div>
+        <div id="status-kpi"><span style="color: #94a3b8; font-size: 12px;">Tự động lấy file KPI sẵn có</span></div>
+      </div>
+
+      <!-- Template Bảng lương -->
+      <div class="dropzone-card" id="drop-template" onclick="document.getElementById('file-template').click()">
+        <input type="file" id="file-template" accept=".xlsx,.xls" style="display: none;">
+        <div style="font-size: 28px; margin-bottom: 6px;">📑</div>
+        <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">Template Bảng Lương Mẫu</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Mẫu chuẩn 70 dòng công thức sạch</div>
+        <div id="status-template"><span style="color: #94a3b8; font-size: 12px;">Mẫu mặc định hệ thống</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Button -->
+  <button class="btn-action-primary" id="btn-generate-payroll" onclick="executePayrollProcess()">
+    <span>💼</span> TÍNH TOÁN & XUẤT BẢNG LƯƠNG HOÀN THIỆN
+  </button>
+
+  <!-- Result Box -->
+  <div class="section-card" id="payroll-result-box" style="display: none; margin-top: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #1e293b; padding-bottom: 10px;">
+      <div style="font-size: 15px; font-weight: 800; color: #a78bfa;">
+        ✅ ĐÃ TÍNH TOÁN BẢNG LƯƠNG HOÀN THIỆN
+      </div>
+      <a class="btn-download-pill" id="btn-download-payroll" href="/download-payroll" download="BANGLUONG_hoanthien.xlsx">
+        <span>⬇️</span> Tải Bảng Lương Hoàn Thiện (.xlsx)
+      </a>
+    </div>
+
+    <div class="stats-summary-grid">
+      <div class="stat-chip-card">
+        <div class="stat-chip-label">Tổng Giờ Ca Ngày</div>
+        <div class="stat-chip-val" id="lbl-pr-dayhrs">0h</div>
+      </div>
+      <div class="stat-chip-card">
+        <div class="stat-chip-label">Tổng Giờ Ca Đêm</div>
+        <div class="stat-chip-val" id="lbl-pr-nighthrs">0h</div>
+      </div>
+      <div class="stat-chip-card">
+        <div class="stat-chip-label">Phụ Cấp Sức Khỏe Ca Đêm</div>
+        <div class="stat-chip-val" id="lbl-pr-nightallow">0 đ</div>
+      </div>
+      <div class="stat-chip-card">
+        <div class="stat-chip-label">Tổng Thưởng KPI & CK</div>
+        <div class="stat-chip-val" id="lbl-pr-rewards">0 đ</div>
+      </div>
+    </div>
+
+    <!-- Preview Table -->
+    <div style="font-size: 13px; font-weight: 700; color: #cbd5e1; margin-top: 10px; margin-bottom: 6px;">
+      👥 Danh sách nhân sự trích dẫn:
+    </div>
+    <div class="mini-table-box">
+      <table class="mini-table">
+        <thead>
+          <tr>
+            <th>Họ và tên</th>
+            <th>Chi nhánh</th>
+            <th>Chức danh</th>
+            <th>Giờ ngày</th>
+            <th>Giờ đêm</th>
+            <th>Ca đêm</th>
+            <th>Thưởng KPI</th>
+            <th>Thưởng CK</th>
+          </tr>
+        </thead>
+        <tbody id="payroll-staff-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let currentMonth = 8;
+  let fileState = { timecardBase64: null, kpiBase64: null, templateBase64: null };
+
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.className = isError ? 'toast error' : 'toast';
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 4500);
+  }
+
+  function onMonthChange() {
+    currentMonth = parseInt(document.getElementById('sel-month').value);
+    showToast(`Đã chuyển kỳ lương sang Tháng ${currentMonth}/2026`);
+  }
+
+  function setupDropzones() {
+    const drops = [
+      { id: 'drop-timecard', inputId: 'file-timecard', type: 'timecard' },
+      { id: 'drop-kpi', inputId: 'file-kpi', type: 'kpi' },
+      { id: 'drop-template', inputId: 'file-template', type: 'template' }
+    ];
+
+    drops.forEach(({ id, inputId, type }) => {
+      const el = document.getElementById(id);
+      const input = document.getElementById(inputId);
+      if (!el || !input) return;
+
+      el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag-over'); });
+      el.addEventListener('dragleave', () => { el.classList.remove('drag-over'); });
+      el.addEventListener('drop', (e) => {
+        e.preventDefault();
+        el.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) handleFileSelection(e.dataTransfer.files[0], type);
+      });
+      input.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) handleFileSelection(e.target.files[0], type);
+      });
+    });
+  }
+
+  function handleFileSelection(file, type) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64 = e.target.result.split(',')[1];
+      if (type === 'timecard') {
+        fileState.timecardBase64 = base64;
+        document.getElementById('status-timecard').innerHTML = `<span style="color: #34d399; font-weight: 700;">✅ ${file.name}</span>`;
+        document.getElementById('drop-timecard').classList.add('has-file');
+        showToast(`Đã nạp file chấm công: ${file.name}`);
+      } else if (type === 'kpi') {
+        fileState.kpiBase64 = base64;
+        document.getElementById('status-kpi').innerHTML = `<span style="color: #34d399; font-weight: 700;">✅ ${file.name}</span>`;
+        document.getElementById('drop-kpi').classList.add('has-file');
+      } else if (type === 'template') {
+        fileState.templateBase64 = base64;
+        document.getElementById('status-template').innerHTML = `<span style="color: #34d399; font-weight: 700;">✅ ${file.name}</span>`;
+        document.getElementById('drop-template').classList.add('has-file');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function executePayrollProcess() {
+    const btn = document.getElementById('btn-generate-payroll');
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳</span> Đang tính toán bảng lương...`;
+
+    try {
+      const res = await fetch('/api/generate-payroll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timecard_base64: fileState.timecardBase64,
+          kpi_base64: fileState.kpiBase64,
+          template_base64: fileState.templateBase64,
+          month: currentMonth
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(`🎉 Tính toán Bảng Lương Tháng ${currentMonth} thành công!`);
+        const st = data.stats;
+        document.getElementById('lbl-pr-dayhrs').innerText = (st.total_day_hours || 0).toFixed(1) + 'h';
+        document.getElementById('lbl-pr-nighthrs').innerText = (st.total_night_hours || 0).toFixed(1) + `h (${st.total_night_shifts || 0} ca)`;
+        document.getElementById('lbl-pr-nightallow').innerText = (st.total_night_allowance || 0).toLocaleString('vi-VN') + ' đ';
+        document.getElementById('lbl-pr-rewards').innerText = ((st.total_kpi_reward || 0) + (st.total_ck_reward || 0)).toLocaleString('vi-VN') + ' đ';
+        
+        const tbody = document.getElementById('payroll-staff-tbody');
+        tbody.innerHTML = '';
+        if (st.staff_sample && st.staff_sample.length > 0) {
+          st.staff_sample.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><strong>${s.name}</strong></td>
+              <td>${s.branch}</td>
+              <td>${s.role}</td>
+              <td>${s.day_hrs.toFixed(1)}h</td>
+              <td>${s.night_hrs.toFixed(1)}h</td>
+              <td>${s.night_shifts} ca</td>
+              <td>${s.kpi_reward.toLocaleString('vi-VN')} đ</td>
+              <td>${s.ck_reward.toLocaleString('vi-VN')} đ</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+
+        document.getElementById('btn-download-payroll').href = `/download-payroll?filename=${data.filename}`;
+        document.getElementById('payroll-result-box').style.display = 'block';
+      } else {
+        showToast(`Lỗi: ${data.error}`, true);
+      }
+    } catch (err) {
+      showToast(`Lỗi kết nối: ${err.message}`, true);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<span>💼</span> TÍNH TOÁN & XUẤT BẢNG LƯƠNG HOÀN THIỆN`;
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', setupDropzones);
+</script>
+</body>
+</html>

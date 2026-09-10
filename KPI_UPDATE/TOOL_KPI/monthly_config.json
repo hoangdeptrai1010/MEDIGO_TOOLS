@@ -1,0 +1,326 @@
+{
+  "active_month": 8,
+  "branches": [
+    {
+      "name": "Trường Sa",
+      "manager": "Nguyễn Trần Ngọc Phương",
+      "target": 640000000,
+      "m1": 128000000,
+      "m2": 144000000,
+      "m3": 160000000
+    },
+    {
+      "name": "Đỗ Quang Đẩu",
+      "manager": "Ngô Thị Thanh Thắm",
+      "target": 1100000000,
+      "m1": 220000000,
+      "m2": 247500000,
+      "m3": 275000000
+    },
+    {
+      "name": "Minh Châu",
+      "manager": "Thái Thùy Linh",
+      "target": 460000000,
+      "m1": 92000000,
+      "m2": 103500000,
+      "m3": 115000000
+    },
+    {
+      "name": "Nam Hòa",
+      "manager": "Vũ Ngọc Thanh Thảo",
+      "target": 330000000,
+      "m1": 66000000,
+      "m2": 74250000,
+      "m3": 82500000
+    },
+    {
+      "name": "Nguyễn Chí Thanh",
+      "manager": "Lê Thị Quỳnh Trâm",
+      "target": 550000000,
+      "m1": 110000000,
+      "m2": 123750000,
+      "m3": 137500000
+    },
+    {
+      "name": "Nguyễn Thị Thập",
+      "manager": "Triệu Thị Ngọc Lý",
+      "target": 545000000,
+      "m1": 109000000,
+      "m2": 122625000,
+      "m3": 136250000
+    },
+    {
+      "name": "Nguyễn Văn Quá",
+      "manager": "Võ Ngọc Giàu Sang",
+      "target": 400000000,
+      "m1": 80000000,
+      "m2": 90000000,
+      "m3": 100000000
+    },
+    {
+      "name": "Rạch Bùng Binh",
+      "manager": "Cù Thị Tường Vy",
+      "target": 420000000,
+      "m1": 84000000,
+      "m2": 94500000,
+      "m3": 105000000
+    },
+    {
+      "name": "Lê Bình",
+      "manager": "Hồ Thị Minh Hòa",
+      "target": 325500000,
+      "m1": 65100000,
+      "m2": 73237500,
+      "m3": 81375000
+    },
+    {
+      "name": "Đường Láng",
+      "manager": "Hứa Thị Kim Thoa",
+      "target": 980000000,
+      "m1": 196000000,
+      "m2": 220500000,
+      "m3": 245000000
+    },
+    {
+      "name": "Hàng Bông",
+      "manager": "Đinh Thị Lan Anh",
+      "target": 1270000000,
+      "m1": 254000000,
+      "m2": 285750000,
+      "m3": 317500000
+    }
+  ],
+  "staff_roles": {
+    "default_target_rev": 200000000,
+    "default_target_tb_bill": 200000,
+    "role_defaults": {
+      "CHT": {
+        "target_rev": 200000000,
+        "target_tb_bill": 150000
+      },
+      "DSXC": {
+        "target_rev": 200000000,
+        "target_tb_bill": 245000
+      },
+      "BC": {
+        "target_rev": 200000000,
+        "target_tb_bill": 245000
+      },
+      "NV": {
+        "target_rev": 200000000,
+        "target_tb_bill": 200000
+      },
+      "DSTV": {
+        "target_rev": 100000000,
+        "target_tb_bill": 150000
+      }
+    }
+  },
+  "monthly_policies": {
+    "7": {
+      "name": "Chính sách Tháng 7/2026",
+      "hanoi": {
+        "khuyen_khich_min_daily": 2000000,
+        "khuyen_khich_bonus": 500000,
+        "tiers": [
+          {
+            "bonus": 4000000,
+            "min_ck": 3400000,
+            "min_combo": 800000
+          },
+          {
+            "bonus": 2800000,
+            "min_ck": 3000000,
+            "min_combo": 700000
+          },
+          {
+            "bonus": 2000000,
+            "min_ck": 2600000,
+            "min_combo": 550000
+          },
+          {
+            "bonus": 1200000,
+            "min_ck": 2200000,
+            "min_combo": 450000
+          }
+        ]
+      },
+      "hcm": {
+        "khuyen_khich_min_daily": 950000,
+        "khuyen_khich_bonus": 500000,
+        "tiers": [
+          {
+            "bonus": 4000000,
+            "min_ck": 1500000,
+            "min_combo": 700000
+          },
+          {
+            "bonus": 2800000,
+            "min_ck": 1200000,
+            "min_combo": 650000
+          },
+          {
+            "bonus": 2200000,
+            "min_ck": 1000000,
+            "min_combo": 580000
+          },
+          {
+            "bonus": 1600000,
+            "min_ck": 850000,
+            "min_combo": 480000
+          },
+          {
+            "bonus": 1000000,
+            "min_ck": 630000,
+            "min_combo": 350000
+          }
+        ]
+      },
+      "hot_bill_hn": {
+        "enabled": false,
+        "min_bill_val": 1000000,
+        "bonus_per_bill": 50000
+      }
+    },
+    "8": {
+      "name": "Chính sách Tháng 8/2026",
+      "hanoi": {
+        "khuyen_khich_min_daily": 2000000,
+        "khuyen_khich_bonus": 500000,
+        "tiers": [
+          {
+            "bonus": 4000000,
+            "min_ck": 3400000,
+            "min_combo": 900000
+          },
+          {
+            "bonus": 2800000,
+            "min_ck": 3200000,
+            "min_combo": 750000
+          },
+          {
+            "bonus": 2200000,
+            "min_ck": 2800000,
+            "min_combo": 650000
+          },
+          {
+            "bonus": 1600000,
+            "min_ck": 2500000,
+            "min_combo": 520000
+          },
+          {
+            "bonus": 1000000,
+            "min_ck": 2200000,
+            "min_combo": 450000
+          }
+        ]
+      },
+      "hcm": {
+        "khuyen_khich_min_daily": 950000,
+        "khuyen_khich_bonus": 500000,
+        "tiers": [
+          {
+            "bonus": 4000000,
+            "min_ck": 1500000,
+            "min_combo": 700000
+          },
+          {
+            "bonus": 2800000,
+            "min_ck": 1200000,
+            "min_combo": 650000
+          },
+          {
+            "bonus": 2200000,
+            "min_ck": 1000000,
+            "min_combo": 580000
+          },
+          {
+            "bonus": 1600000,
+            "min_ck": 850000,
+            "min_combo": 480000
+          },
+          {
+            "bonus": 1000000,
+            "min_ck": 630000,
+            "min_combo": 350000
+          }
+        ]
+      },
+      "hot_bill_hn": {
+        "enabled": true,
+        "min_bill_val": 1000000,
+        "bonus_per_bill": 50000
+      }
+    },
+    "9": {
+      "name": "Chính sách Tháng 9/2026",
+      "hanoi": {
+        "khuyen_khich_min_daily": 2000000,
+        "khuyen_khich_bonus": 500000,
+        "tiers": [
+          {
+            "bonus": 4000000,
+            "min_ck": 3400000,
+            "min_combo": 900000
+          },
+          {
+            "bonus": 2800000,
+            "min_ck": 3200000,
+            "min_combo": 750000
+          },
+          {
+            "bonus": 2200000,
+            "min_ck": 2800000,
+            "min_combo": 650000
+          },
+          {
+            "bonus": 1600000,
+            "min_ck": 2500000,
+            "min_combo": 520000
+          },
+          {
+            "bonus": 1000000,
+            "min_ck": 2200000,
+            "min_combo": 450000
+          }
+        ]
+      },
+      "hcm": {
+        "khuyen_khich_min_daily": 950000,
+        "khuyen_khich_bonus": 500000,
+        "tiers": [
+          {
+            "bonus": 4000000,
+            "min_ck": 1500000,
+            "min_combo": 700000
+          },
+          {
+            "bonus": 2800000,
+            "min_ck": 1200000,
+            "min_combo": 650000
+          },
+          {
+            "bonus": 2200000,
+            "min_ck": 1000000,
+            "min_combo": 580000
+          },
+          {
+            "bonus": 1600000,
+            "min_ck": 850000,
+            "min_combo": 480000
+          },
+          {
+            "bonus": 1000000,
+            "min_ck": 630000,
+            "min_combo": 350000
+          }
+        ]
+      },
+      "hot_bill_hn": {
+        "enabled": true,
+        "min_bill_val": 1000000,
+        "bonus_per_bill": 50000
+      }
+    }
+  }
+}

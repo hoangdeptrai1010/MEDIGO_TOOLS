@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEDIGO - Tool Khởi Tạo Gói KPI Từ Đề Xuất Quản Lý</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0B1120;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --primary: #3B82F6;
+      --primary-hover: #2563EB;
+      --success: #10B981;
+      --accent: #8B5CF6;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    body {
+      background: radial-gradient(circle at top right, #1E1B4B, #0B1120 70%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60A5FA;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FFFFFF, #93C5FD);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dropzone {
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 25px 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(15, 23, 42, 0.4);
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .dropzone svg {
+      width: 40px;
+      height: 40px;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    .file-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #34D399;
+      margin-top: 8px;
+      word-break: break-all;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    select, input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: #FFF;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.3s;
+    }
+    select:focus, input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #3B82F6, #2563EB);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      transform: translateY(-2px);
+    }
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-top: 25px;
+    }
+    @media (max-width: 640px) {
+      .stats-container { grid-template-columns: 1fr 1fr; }
+    }
+    .stat-box {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 18px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #60A5FA;
+    }
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .table-wrapper {
+      max-height: 380px;
+      overflow-y: auto;
+      margin-top: 20px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+    th {
+      background: #1E293B;
+      padding: 12px 16px;
+      color: #94A3B8;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .btn-download {
+      display: inline-block;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: white;
+      text-decoration: none;
+      font-weight: 700;
+      border-radius: 10px;
+      margin-top: 20px;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      transition: all 0.3s;
+    }
+    .btn-download:hover {
+      transform: translateY(-2px);
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">MEDIGO AUTOMATION ENGINE</div>
+      <h1>Tool Khởi Tạo Gói KPI Từ Đề Xuất Quản Lý</h1>
+      <p class="subtitle">Tự động bóc tách từ file đề xuất QLKV HCM & HN để tạo gói Kế hoạch KPI chuẩn tháng</p>
+    </header>
+
+    <div class="glass-card" style="margin-bottom: 25px;">
+      <div class="form-group">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <label for="monthSelect" style="margin-bottom:0;">📅 Chọn Tháng Kế Hoạch Áp Dụng</label>
+          <span id="monthAutoNotice" style="display:none; font-size:0.85rem; color:#34D399; font-weight:600; background:rgba(16,185,129,0.15); padding:2px 10px; border-radius:999px;">🎯 Tự động phát hiện từ file</span>
+        </div>
+        <select id="monthSelect">
+          <option value="1">Tháng 01 / 2026</option>
+          <option value="2">Tháng 02 / 2026</option>
+          <option value="3">Tháng 03 / 2026</option>
+          <option value="4">Tháng 04 / 2026</option>
+          <option value="5">Tháng 05 / 2026</option>
+          <option value="6">Tháng 06 / 2026</option>
+          <option value="7">Tháng 07 / 2026</option>
+          <option value="8">Tháng 08 / 2026</option>
+          <option value="9" selected>Tháng 09 / 2026</option>
+          <option value="10">Tháng 10 / 2026</option>
+          <option value="11">Tháng 11 / 2026</option>
+          <option value="12">Tháng 12 / 2026</option>
+        </select>
+      </div>
+
+      <div class="grid-2">
+        <!-- HCM Proposal -->
+        <div>
+          <div class="card-title">
+            <span>🌆</span> Đề Xuất KPI Hồ Chí Minh (9 Nhà Thuốc)
+          </div>
+          <div class="dropzone" id="hcmDropzone" onclick="document.getElementById('hcmInput').click()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+            <p>Kéo thả hoặc click chọn file Excel QL HCM</p>
+            <div class="file-name" id="hcmFileName">Mặc định: KPI CNT HCM Tháng 09.xlsx</div>
+            <input type="file" id="hcmInput" style="display:none" accept=".xlsx,.xls">
+          </div>
+        </div>
+
+        <!-- HN Proposal -->
+        <div>
+          <div class="card-title">
+            <span>🏛️</span> Đề Xuất KPI Hà Nội (Hàng Bông & Đường Láng)
+          </div>
+          <div class="dropzone" id="hnDropzone" onclick="document.getElementById('hnInput').click()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+            <p>Kéo thả hoặc click chọn file Excel QL HN</p>
+            <div class="file-name" id="hnFileName">Mặc định: e_xuat_KPI_Quy_3.26.xlsx</div>
+            <input type="file" id="hnInput" style="display:none" accept=".xlsx,.xls">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="btnBuild" onclick="handleBuildPlan()">
+        <span>⚡</span> TỰ ĐỘNG BÓC TÁCH & TẠO GÓI KẾ HOẠCH KPI THÁNG
+      </button>
+    </div>
+
+    <!-- Results Section -->
+    <div class="glass-card hidden" id="resultCard">
+      <div class="card-title" style="color: #34D399;">
+        <span>✅</span> Đã Khởi Tạo Gói Kế Hoạch KPI Thành Công!
+      </div>
+      
+      <div class="stats-container">
+        <div class="stat-box">
+          <div class="stat-number" id="statStaff">0</div>
+          <div class="stat-label">Tổng Dược Sĩ</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="statStores">0</div>
+          <div class="stat-label">Tổng Nhà Thuốc</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="statHcmStaff">0</div>
+          <div class="stat-label">Dược Sĩ HCM</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="statHnStaff">0</div>
+          <div class="stat-label">Dược Sĩ HN</div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 20px;">
+        <a href="#" id="downloadLink" class="btn-download" download>
+          📥 Tải Về Gói Kế Hoạch KPI (Excel)
+        </a>
+      </div>
+
+      <h3 style="margin-top: 30px; font-size: 1.1rem; color: #94A3B8;">📋 Danh Sách Nhân Sự & Chỉ Tiêu Đã Trích Xuất</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Nhà Thuốc</th>
+              <th>Dược Sĩ</th>
+              <th>Chức Danh</th>
+              <th>TB Bill Mục Tiêu</th>
+              <th>Khu Vực</th>
+            </tr>
+          </thead>
+          <tbody id="staffTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let hcmFile = null;
+    let hnFile = null;
+
+    function formatFileSize(bytes) {
+      if (!bytes) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function tryAutoDetectMonth(filename) {
+      if (!filename) return;
+      // Matches "Tháng 09", "Thang 9", "T9", "T09", "Tháng 8", etc.
+      const m = filename.match(/(?:th[aá]ng|t)\s*0?([1-9]|1[0-2])(?:\b|_|\.|\s)/i) || filename.match(/(?:th[aá]ng|t)\s*0?([1-9]|1[0-2])/i);
+      if (m && m[1]) {
+        const detectedMonth = parseInt(m[1], 10);
+        const monthSelect = document.getElementById('monthSelect');
+        if (monthSelect) {
+          monthSelect.value = String(detectedMonth);
+          const notice = document.getElementById('monthAutoNotice');
+          if (notice) {
+            notice.style.display = 'inline-block';
+            notice.textContent = `🎯 Tự động phát hiện Tháng ${detectedMonth} từ file!`;
+            setTimeout(() => {
+              notice.style.opacity = '1';
+            }, 50);
+          }
+        }
+      }
+    }
+
+    function setupDropzone(dropzoneId, inputId, fileNameId, isHcm) {
+      const dropzone = document.getElementById(dropzoneId);
+      const input = document.getElementById(inputId);
+      const fileNameEl = document.getElementById(fileNameId);
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('dragover');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('dragover');
+        }, false);
+      });
+
+      function handleFileLoaded(file) {
+        if (!file) return;
+        if (isHcm) {
+          hcmFile = file;
+        } else {
+          hnFile = file;
+        }
+        fileNameEl.innerHTML = `<span style="color:#10B981;">✅ Đã nạp: <strong>${file.name}</strong> (${formatFileSize(file.size)})</span>`;
+        dropzone.style.borderColor = '#10B981';
+        dropzone.style.background = 'rgba(16, 185, 129, 0.1)';
+        tryAutoDetectMonth(file.name);
+      }
+
+      dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+          handleFileLoaded(files[0]);
+        }
+      });
+
+      input.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          handleFileLoaded(e.target.files[0]);
+        }
+      });
+    }
+
+    setupDropzone('hcmDropzone', 'hcmInput', 'hcmFileName', true);
+    setupDropzone('hnDropzone', 'hnInput', 'hnFileName', false);
+
+    async function handleBuildPlan() {
+      const btn = document.getElementById('btnBuild');
+      const month = document.getElementById('monthSelect').value;
+
+      if (!hcmFile && !hnFile) {
+        const confirmUseDefault = confirm("Bạn chưa kéo thả/chọn file đề xuất mới. Bạn có muốn sử dụng 2 file đề xuất có sẵn trong thư mục không?");
+        if (!confirmUseDefault) {
+          return;
+        }
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Đang bóc tách trực tiếp từ file tải lên...';
+
+      const formData = new FormData();
+      formData.append('month', month);
+      if (hcmFile) formData.append('hcm_file', hcmFile);
+      if (hnFile) formData.append('hn_file', hnFile);
+
+      try {
+        const resp = await fetch('/api/build', {
+          method: 'POST',
+          body: formData
+        });
+        const res = await resp.json();
+        
+        if (res.success) {
+          const d = res.data;
+          document.getElementById('resultCard').classList.remove('hidden');
+          document.getElementById('statStaff').textContent = d.staff_count;
+          document.getElementById('statStores').textContent = d.stores_count;
+          document.getElementById('statHcmStaff').textContent = d.hcm_staff_count;
+          document.getElementById('statHnStaff').textContent = d.hn_staff_count;
+          
+          document.getElementById('downloadLink').href = d.download_url;
+          document.getElementById('downloadLink').textContent = `📥 Tải Về ${d.filename}`;
+
+          // Populate preview table
+          const tbody = document.getElementById('staffTableBody');
+          tbody.innerHTML = '';
+          (d.staff_sample || []).forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><strong>${s.store}</strong></td>
+              <td>${s.name}</td>
+              <td>${s.role}</td>
+              <td>${(s.tb_bill || 0).toLocaleString()} đ</td>
+              <td><span style="color:${s.region==='HN'?'#60A5FA':'#34D399'}">${s.region}</span></td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          // Scroll to result smoothly
+          document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+        } else {
+          alert('Lỗi: ' + (res.error || 'Không thể tạo gói kế hoạch'));
+        }
+      } catch (err) {
+        alert('Lỗi kết nối máy chủ: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡</span> TỰ ĐỘNG BÓC TÁCH & TẠO GÓI KẾ HOẠCH KPI THÁNG';
+      }
+    }
+  </script>
+</body>
+</html>

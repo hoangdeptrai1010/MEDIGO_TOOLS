@@ -1,0 +1,81 @@
+Total rows in BẢNG LƯƠNG: 294
+
+--- Row 3: Chi nhánh=Trường Sa, Tên=Hồ Thị Minh Hòa ---
+  Col A (STT ): 1.0
+  Col B (Chi nhánh): Trường Sa
+  Col C (Tên ): Hồ Thị Minh Hòa
+  Col D (Hình thức): CHT
+  Col E (Số giờ ca ngày): =SUM(G3, I3, L3, O3, S3, T3)
+  Col F (Số giờ ca đêm): =SUM(H3, P3)
+  Col G (Số giờ ca ngày ): =SUMIFS('Giờ công'!I:I, 'Giờ công'!G:G, B3, 'Giờ công'!H:H, C3)
+  Col H (Số giờ ca đêm
+( chưa x 1.5 )): =SUMIFS('Giờ công'!J:J, 'Giờ công'!G:G, B3, 'Giờ công'!H:H, C3)
+  Col I (Số giờ tăng ca ngày ( x 1 )): =IFS(R3>=30, 16, R3=29, 8, TRUE, "")
+  Col J (Số ngày thực làm): =SUMIFS('Ngày công'!H:H, 'Ngày công'!A:A, B3, 'Ngày công'!B:B, C3)
+  Col K (Số ngày làm đêm): =SUMIFS('Ngày công'!I:I, 'Ngày công'!A:A, B3, 'Ngày công'!B:B, C3)
+  Col N (Số ngày lễ vẫn đi làm): =SUMIFS('Tăng ca lễ'!M:M, 'Tăng ca lễ'!K:K, B3, 'Tăng ca lễ'!L:L, C3)
+  Col O (Số giờ lễ ca ngày ( Đã x 3 )): =IF(OR(D3="PT", D3="DSHV"), SUMIFS('Tăng ca lễ'!O:O, 'Tăng ca lễ'!K:K, B3, 'Tăng ca lễ'!L:L, C3)*2, SUMIFS('Tăng ca lễ'!O:O, 'Tăng ca lễ'!K:K, B3, 'Tăng ca lễ'!L:L, C3)*3)
+  Col P (Số giờ lễ ca đêm ( Đã x 3 )): =IF(OR(D3="PT", D3="DSHV"), SUMIFS('Tăng ca lễ'!P:P, 'Tăng ca lễ'!K:K, B3, 'Tăng ca lễ'!L:L, C3)*2, SUMIFS('Tăng ca lễ'!P:P, 'Tăng ca lễ'!K:K, B3, 'Tăng ca lễ'!L:L, C3)*3)
+  Col R (Số ngày công thực tế): =SUMIFS('Ngày công'!M:M, 'Ngày công'!K:K, B3, 'Ngày công'!L:L, C3)
+  Col S (Số giờ tham gia đào tạo): =SUMIFS('Công Đào tạo'!G:G, 'Công Đào tạo'!E:E, B3, 'Công Đào tạo'!F:F, C3)
+  Col T (Số giờ nghỉ phép năm): 0.0
+  Col V (Phụ cấp trách nhiệm (áp dụng CHT)): =IF(OR(TRIM(D3)="CHT", TRIM(D3)="Q.CHT"), 500000/31*R3, 0)
+  Col X (Phụ cấp sức khỏe ca đêm): =IF(TRIM(D3)="DSCD", 1500000, IF(AND(H3>=160), 1500000, 0))
+  Col AA (Thưởng dự án Mini KAT 
+(Dược sĩ)): =SUMIFS('MiniKat - HN'!$J:$J, 'MiniKat - HN'!$A:$A, C3) + SUMIFS('MiniKat - HCM'!$J:$J, 'MiniKat - HCM'!$A:$A, C3)
+  Col AB (Thưởng dự án Mini KAT 
+(Đại diện CHT nhận)): =IF(OR(TRIM(D3)="CHT", TRIM(D3)="Q.CHT"), SUMIFS('MiniKat - HN'!$P:$P, 'MiniKat - HN'!$M:$M, B3) + SUMIFS('MiniKat - HN'!$Q:$Q, 'MiniKat - HN'!$M:$M, B3) + SUMIFS('MiniKat - HCM'!$P:$P, 'MiniKat - HCM'!$M:$M, B3) + SUMIFS('MiniKat - HCM'!$Q:$Q, 'MiniKat - HCM'!$M:$M, B3), 0)
+  Col AC (Thường Whatsapp): =SUMIFS(whatsapp!$D:$D, whatsapp!$A:$A, C3)
+  Col AD (Phụ cấp quy trình/dự án): =SUMIFS('Dự án'!$C:$C, 'Dự án'!$A:$A, B3, 'Dự án'!$B:$B, C3)
+  Col AE (Thưởng KPI): =SUMIFS(KPI!$C:$C, KPI!$A:$A, B3, KPI!$B:$B, C3)
+  Col AF (Thưởng hàng điểm + Cắt liều): =SUMIFS('Thưởng CK'!$C:$C, 'Thưởng CK'!$A:$A, B3, 'Thưởng CK'!$B:$B, C3)
+  Col AG (Thưởng hàng cận date): =SUMIFS('Cận date'!$C:$C, 'Cận date'!$A:$A, B3, 'Cận date'!$B:$B, C3)
+  Col AH (Thưởng chương trình Maps): =SUMIFS(Map!$D:$D, Map!$B:$B, B3, Map!$A:$A, C3)
+  Col AI (Thưởng khác ): 0.0
+  Col AJ (Total): =SUM(AK3:AO3)
+  Col AK (Hàng hết date): =SUMIFS('KPI trừ'!$C:$C, 'KPI trừ'!$A:$A, B3, 'KPI trừ'!$B:$B, C3)
+  Col AL (Quy chế quy trình): =SUMIFS('KPI trừ'!$D:$D, 'KPI trừ'!$A:$A, B3, 'KPI trừ'!$B:$B, C3)
+  Col AM (HD App - Kiot): =SUMIFS('KPI trừ'!$E:$E, 'KPI trừ'!$A:$A, B3, 'KPI trừ'!$B:$B, C3)
+  Col AN (Ecom): =SUMIFS('KPI trừ'!$F:$F, 'KPI trừ'!$A:$A, B3, 'KPI trừ'!$B:$B, C3)
+  Col AO (Khác): =SUMIFS('KPI trừ'!$G:$G, 'KPI trừ'!$A:$A, B3, 'KPI trừ'!$B:$B, C3)
+  Col AP (Ghi chú): =IFERROR(TEXTJOIN(" ",TRUE,_xlws.FILTER('KPI trừ'!$H:$H,('KPI trừ'!$A:$A=B3)*('KPI trừ'!$B:$B=C3))),"")
+
+--- Row 55: Chi nhánh=Lê Bình, Tên=Hồ Thị Minh Hòa ---
+  Col A (STT ): 53.0
+  Col B (Chi nhánh): Lê Bình
+  Col C (Tên ): Hồ Thị Minh Hòa
+  Col D (Hình thức): CHT
+  Col E (Số giờ ca ngày): =SUM(G55, I55, L55, O55, S55, T55)
+  Col F (Số giờ ca đêm): =SUM(H55, P55)
+  Col G (Số giờ ca ngày ): =SUMIFS('Giờ công'!I:I, 'Giờ công'!G:G, B55, 'Giờ công'!H:H, C55)
+  Col H (Số giờ ca đêm
+( chưa x 1.5 )): =SUMIFS('Giờ công'!J:J, 'Giờ công'!G:G, B55, 'Giờ công'!H:H, C55)
+  Col I (Số giờ tăng ca ngày ( x 1 )): =IFS(R55>=30, 16, R55=29, 8, TRUE, "")
+  Col J (Số ngày thực làm): =SUMIFS('Ngày công'!H:H, 'Ngày công'!A:A, B55, 'Ngày công'!B:B, C55)
+  Col K (Số ngày làm đêm): =SUMIFS('Ngày công'!I:I, 'Ngày công'!A:A, B55, 'Ngày công'!B:B, C55)
+  Col N (Số ngày lễ vẫn đi làm): =SUMIFS('Tăng ca lễ'!M:M, 'Tăng ca lễ'!K:K, B55, 'Tăng ca lễ'!L:L, C55)
+  Col O (Số giờ lễ ca ngày ( Đã x 3 )): =IF(OR(D55="PT", D55="DSHV"), SUMIFS('Tăng ca lễ'!O:O, 'Tăng ca lễ'!K:K, B55, 'Tăng ca lễ'!L:L, C55)*2, SUMIFS('Tăng ca lễ'!O:O, 'Tăng ca lễ'!K:K, B55, 'Tăng ca lễ'!L:L, C55)*3)
+  Col P (Số giờ lễ ca đêm ( Đã x 3 )): =IF(OR(D55="PT", D55="DSHV"), SUMIFS('Tăng ca lễ'!P:P, 'Tăng ca lễ'!K:K, B55, 'Tăng ca lễ'!L:L, C55)*2, SUMIFS('Tăng ca lễ'!P:P, 'Tăng ca lễ'!K:K, B55, 'Tăng ca lễ'!L:L, C55)*3)
+  Col R (Số ngày công thực tế): =SUMIFS('Ngày công'!M:M, 'Ngày công'!K:K, B55, 'Ngày công'!L:L, C55)
+  Col S (Số giờ tham gia đào tạo): =SUMIFS('Công Đào tạo'!G:G, 'Công Đào tạo'!E:E, B55, 'Công Đào tạo'!F:F, C55)
+  Col T (Số giờ nghỉ phép năm): 0.0
+  Col V (Phụ cấp trách nhiệm (áp dụng CHT)): =IF(OR(TRIM(D55)="CHT", TRIM(D55)="Q.CHT"), 500000/31*R55, 0)
+  Col X (Phụ cấp sức khỏe ca đêm): =IF(TRIM(D55)="DSCD", 1500000, IF(AND(H55>=160), 1500000, 0))
+  Col AA (Thưởng dự án Mini KAT 
+(Dược sĩ)): =SUMIFS('MiniKat - HN'!$J:$J, 'MiniKat - HN'!$A:$A, C55) + SUMIFS('MiniKat - HCM'!$J:$J, 'MiniKat - HCM'!$A:$A, C55)
+  Col AB (Thưởng dự án Mini KAT 
+(Đại diện CHT nhận)): =IF(OR(TRIM(D55)="CHT", TRIM(D55)="Q.CHT"), SUMIFS('MiniKat - HN'!$P:$P, 'MiniKat - HN'!$M:$M, B55) + SUMIFS('MiniKat - HN'!$Q:$Q, 'MiniKat - HN'!$M:$M, B55) + SUMIFS('MiniKat - HCM'!$P:$P, 'MiniKat - HCM'!$M:$M, B55) + SUMIFS('MiniKat - HCM'!$Q:$Q, 'MiniKat - HCM'!$M:$M, B55), 0)
+  Col AC (Thường Whatsapp): =SUMIFS(whatsapp!$D:$D, whatsapp!$A:$A, C55)
+  Col AD (Phụ cấp quy trình/dự án): =SUMIFS('Dự án'!$C:$C, 'Dự án'!$A:$A, B55, 'Dự án'!$B:$B, C55)
+  Col AE (Thưởng KPI): =SUMIFS(KPI!$C:$C, KPI!$A:$A, B55, KPI!$B:$B, C55)
+  Col AF (Thưởng hàng điểm + Cắt liều): =SUMIFS('Thưởng CK'!$C:$C, 'Thưởng CK'!$A:$A, B55, 'Thưởng CK'!$B:$B, C55)
+  Col AG (Thưởng hàng cận date): =SUMIFS('Cận date'!$C:$C, 'Cận date'!$A:$A, B55, 'Cận date'!$B:$B, C55)
+  Col AH (Thưởng chương trình Maps): =SUMIFS(Map!$D:$D, Map!$B:$B, B55, Map!$A:$A, C55)
+  Col AI (Thưởng khác ): 0.0
+  Col AJ (Total): =SUM(AK55:AO55)
+  Col AK (Hàng hết date): =SUMIFS('KPI trừ'!$C:$C, 'KPI trừ'!$A:$A, B55, 'KPI trừ'!$B:$B, C55)
+  Col AL (Quy chế quy trình): =SUMIFS('KPI trừ'!$D:$D, 'KPI trừ'!$A:$A, B55, 'KPI trừ'!$B:$B, C55)
+  Col AM (HD App - Kiot): =SUMIFS('KPI trừ'!$E:$E, 'KPI trừ'!$A:$A, B55, 'KPI trừ'!$B:$B, C55)
+  Col AN (Ecom): =SUMIFS('KPI trừ'!$F:$F, 'KPI trừ'!$A:$A, B55, 'KPI trừ'!$B:$B, C55)
+  Col AO (Khác): =SUMIFS('KPI trừ'!$G:$G, 'KPI trừ'!$A:$A, B55, 'KPI trừ'!$B:$B, C55)
+  Col AP (Ghi chú): =IFERROR(TEXTJOIN(" ",TRUE,_xlws.FILTER('KPI trừ'!$H:$H,('KPI trừ'!$A:$A=B55)*('KPI trừ'!$B:$B=C55))),"")
