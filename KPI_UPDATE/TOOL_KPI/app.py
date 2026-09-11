@@ -17,7 +17,7 @@ _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 if _CURRENT_DIR not in sys.path:
     sys.path.insert(0, _CURRENT_DIR)
 
-from kpi_engine import execute_kpi_engine, MonthlyPlan, to_float
+from kpi_engine import execute_kpi_engine, MonthlyPlan, to_float, detect_data_month_from_invoices
 from build_monthly_plan_packages import build_monthly_plan_file, scan_folder_for_project_data
 
 if sys.stdout.encoding != 'utf-8':
@@ -240,13 +240,16 @@ def process_kpi_from_upload(hoadon_bytes, trahang_bytes=None, plan_bytes=None, t
         with open(out_path, "rb") as f:
             generated_bytes = f.read()
 
-        # Copy completed KPI file to parent directory for payroll engine if needed
+        # Save completed KPI file strictly in the specific month's output folder
         try:
-            parent_kpi_file = os.path.join(PARENT_DIR, f"baocaokpi_thang{month_selected}_hoanthien.xlsx")
-            with open(parent_kpi_file, "wb") as f_p:
+            month_out_dir = os.path.join(PARENT_DIR, f"thang{month_selected}", "output")
+            os.makedirs(month_out_dir, exist_ok=True)
+            saved_month_file = os.path.join(month_out_dir, f"baocaokpi_thang{month_selected}_hoanthien.xlsx")
+            with open(saved_month_file, "wb") as f_p:
                 f_p.write(generated_bytes)
-        except Exception:
-            pass
+            print(f"--> [Output] Đã lưu file kết quả vào thư mục tháng: {saved_month_file}")
+        except Exception as e:
+            print(f"--> [Warning] Không thể lưu file vào thư mục tháng: {e}")
 
     return stats, generated_bytes
 
@@ -419,6 +422,7 @@ class KPIRequestHandler(http.server.SimpleHTTPRequestHandler):
                 trahang_b64 = payload.get('trahang_base64', '')
                 plan_b64 = payload.get('plan_base64', '')
                 template_b64 = payload.get('template_base64', '')
+                report_date = payload.get('report_date', None)
                 month_num = payload.get('month', 8)
                 
                 if not hoadon_b64:
@@ -438,6 +442,7 @@ class KPIRequestHandler(http.server.SimpleHTTPRequestHandler):
                     trahang_bytes=trahang_bytes,
                     plan_bytes=plan_bytes,
                     template_bytes=template_bytes,
+                    report_date_str=report_date,
                     month_num=month_num
                 )
                 

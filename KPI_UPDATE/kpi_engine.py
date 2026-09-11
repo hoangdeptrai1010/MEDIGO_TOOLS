@@ -63,6 +63,14 @@ def find_col(col_map, candidates):
             return col_map[c]
     return None
 
+def remove_accents(input_str):
+    import unicodedata
+    if not input_str:
+        return ""
+    nfkd_form = unicodedata.normalize('NFKD', str(input_str))
+    res = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+    return res.replace('đ', 'd').replace('Đ', 'D')
+
 def clean_branch_name(cn):
     if not cn:
         return ''
@@ -92,11 +100,17 @@ def clean_branch_name(cn):
 # ==============================================================================
 class MonthlyPlan:
     def __init__(self, plan_file_or_period):
-        if os.path.exists(plan_file_or_period):
-            self.plan_path = plan_file_or_period
+        norm_input = os.path.normpath(str(plan_file_or_period)) if plan_file_or_period else ""
+        if os.path.exists(norm_input):
+            self.plan_path = norm_input
+        elif os.path.exists(str(plan_file_or_period)):
+            self.plan_path = str(plan_file_or_period)
         else:
             # period like '2026-08' or '8'
-            p_str = plan_file_or_period if '-' in plan_file_or_period else f"2026-{int(plan_file_or_period):02d}"
+            try:
+                p_str = plan_file_or_period if '-' in str(plan_file_or_period) else f"2026-{int(plan_file_or_period):02d}"
+            except Exception:
+                p_str = "2026-08"
             self.plan_path = os.path.join(PLANS_DIR, f"KeHoachKPI_{p_str}.xlsx")
             
         if not os.path.exists(self.plan_path):
@@ -311,8 +325,9 @@ def parse_flexible_dt(dt_val):
 
 def detect_data_month_from_invoices(hoadon_file):
     """
-    Tự động đọc mẫu hóa đơn đầu vào để xác định chính xác tháng giao dịch thực tế.
-    Đảm bảo nếu đưa data Tháng 9 vào dù chọn chương trình Tháng 8 thì vẫn tính toán chuẩn cho Tháng 9.
+    Tự động đọc mẫu hóa đơn đầu vào để:
+    1. Xác định chính xác tháng/năm giao dịch thực tế.
+    2. Xác định ngày giao dịch mới nhất (max_date) trong tháng đó để làm mốc chốt dữ liệu nếu người dùng không chỉ định.
     """
     try:
         wb = openpyxl.load_workbook(hoadon_file, read_only=True)
@@ -325,17 +340,20 @@ def detect_data_month_from_invoices(hoadon_file):
             wb.close()
             return None
         month_counts = defaultdict(int)
+        max_dates = {}
         for i, r in enumerate(rows):
-            if i > 500:
-                break
             if len(r) > c_dt and r[c_dt]:
                 dt = parse_flexible_dt(r[c_dt])
                 if dt:
-                    month_counts[(dt.year, dt.month)] += 1
+                    key = (dt.year, dt.month)
+                    month_counts[key] += 1
+                    if key not in max_dates or dt > max_dates[key]:
+                        max_dates[key] = dt
         wb.close()
         if month_counts:
             top_ym = max(month_counts.items(), key=lambda x: x[1])[0]
-            return top_ym
+            max_dt = max_dates.get(top_ym)
+            return (top_ym[0], top_ym[1], max_dt)
     except Exception:
         pass
     return None
@@ -346,13 +364,48 @@ def execute_kpi_engine(hoadon_file, trahang_file, template_file, plan_file, outp
     validator = PreFlightValidator(plan)
 
     # 2. Determine Reporting Date Range (Auto-detect from invoices data)
-    inv_ym = detect_data_month_from_invoices(hoadon_file)
-    if inv_ym:
-        inv_year, inv_month = inv_ym
+    inv_info = detect_data_month_from_invoices(hoadon_file)
+    auto_max_dt = None
+    if inv_info:
+        inv_year, inv_month, auto_max_dt = inv_info
         if target_month is not None and target_month != inv_month:
             print(f"--> [Data Month Sync] Hóa đơn nạp vào là dữ liệu Tháng {inv_month}/{inv_year} (thay vì Tháng {target_month}). Tự động đồng bộ báo cáo KPI sang Tháng {inv_month}!")
         target_year = inv_year
         target_month = inv_month
+
+        # Smart Plan Sync: If input plan is for a different month, reload matching month plan if available
+        cand_plans = [
+            os.path.join(BASE_DIR, '..', f"thang{target_month}", "output", f"KeHoachKPI_{target_year}-{target_month:02d}.xlsx"),
+            os.path.join(PLANS_DIR, f"KeHoachKPI_{target_year}-{target_month:02d}.xlsx"),
+            os.path.join(BASE_DIR, 'plans', f"KeHoachKPI_{target_year}-{target_month:02d}.xlsx"),
+            os.path.join(BASE_DIR, '..', 'plans', f"KeHoachKPI_{target_year}-{target_month:02d}.xlsx")
+        ]
+        for cp in cand_plans:
+            if os.path.exists(cp) and os.path.normpath(cp) != os.path.normpath(str(getattr(plan, 'plan_path', ''))):
+                try:
+                    plan = MonthlyPlan(cp)
+                    validator = PreFlightValidator(plan)
+                    print(f"--> [Smart Plan Sync] Tự động đồng bộ sang Gói Kế Hoạch Tháng {target_month}: {cp}")
+                    break
+                except Exception:
+                    pass
+
+        # Smart Template Sync: If input template is missing or for a different month, reload matching month template if available
+        is_tmpl_valid = template_file and os.path.exists(template_file) and (f"THANG {target_month}" in remove_accents(os.path.basename(template_file)).upper() or f"T{target_month}" in os.path.basename(template_file).upper())
+        if not is_tmpl_valid:
+            cand_tmpls = [
+                os.path.join(BASE_DIR, '..', f"thang{target_month}", "output", f"NHÀ THUỐC THÁNG {target_month} {target_year}_new.xlsx"),
+                os.path.join(BASE_DIR, '..', f"thang{target_month}", "output", f"NHÀ THUỐC THÁNG {target_month} {target_year}.xlsx"),
+                os.path.join(BASE_DIR, 'goc', f"NHÀ THUỐC THÁNG {target_month} {target_year}.xlsx"),
+                os.path.join(BASE_DIR, '..', 'goc', f"NHÀ THUỐC THÁNG {target_month} {target_year}.xlsx"),
+                os.path.join(BASE_DIR, 'plans', f"NHÀ THUỐC THÁNG {target_month} {target_year}.xlsx"),
+                os.path.join(BASE_DIR, '..', 'plans', f"NHÀ THUỐC THÁNG {target_month} {target_year}.xlsx")
+            ]
+            for ct in cand_tmpls:
+                if os.path.exists(ct):
+                    template_file = ct
+                    print(f"--> [Smart Template Sync] Tự động nạp Template mẫu Tháng {target_month}: {template_file}")
+                    break
     elif target_month is not None:
         target_month = int(target_month)
         target_year = int(target_year) if target_year else 2026
@@ -370,23 +423,48 @@ def execute_kpi_engine(hoadon_file, trahang_file, template_file, plan_file, outp
             target_year = 2026
 
     _, last_day = calendar.monthrange(target_year, target_month)
-    report_dt = datetime.datetime(target_year, target_month, last_day, 23, 59, 59)
     month_start = datetime.datetime(target_year, target_month, 1, 0, 0, 0)
     
+    user_specified_date = False
     if report_date_str:
         clean_date = str(report_date_str).strip().split()[0].split('T')[0]
         try:
-            parsed_cutoff = datetime.datetime.strptime(clean_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
-            if parsed_cutoff.month == target_month and parsed_cutoff.year == target_year:
-                report_cutoff_dt = parsed_cutoff
+            if '/' in clean_date:
+                p_parts = clean_date.split('/')
+                if len(p_parts[0]) == 4:
+                    parsed_d = datetime.datetime(int(p_parts[0]), int(p_parts[1]), int(p_parts[2]))
+                else:
+                    parsed_d = datetime.datetime(int(p_parts[2]), int(p_parts[1]), int(p_parts[0]))
+            elif '-' in clean_date:
+                p_parts = clean_date.split('-')
+                if len(p_parts[0]) == 4:
+                    parsed_d = datetime.datetime(int(p_parts[0]), int(p_parts[1]), int(p_parts[2]))
+                else:
+                    parsed_d = datetime.datetime(int(p_parts[2]), int(p_parts[1]), int(p_parts[0]))
             else:
-                report_cutoff_dt = datetime.datetime(target_year, target_month, last_day, 23, 59, 59)
-        except Exception:
-            report_cutoff_dt = datetime.datetime(target_year, target_month, last_day, 23, 59, 59)
-    else:
-        report_cutoff_dt = datetime.datetime(target_year, target_month, last_day, 23, 59, 59)
+                parsed_d = None
 
-    print(f"--> [Engine] Xử lý dữ liệu Tháng {target_month}/{target_year}: {month_start} đến {report_cutoff_dt}")
+            if parsed_d:
+                target_year = parsed_d.year
+                target_month = parsed_d.month
+                report_cutoff_dt = datetime.datetime(parsed_d.year, parsed_d.month, parsed_d.day, 23, 59, 59)
+                report_dt = datetime.datetime(parsed_d.year, parsed_d.month, parsed_d.day, 0, 0, 0)
+                user_specified_date = True
+                print(f"--> [Specified Date] Sử dụng ngày chốt báo cáo do người dùng chỉ định: {report_dt.strftime('%d/%m/%Y')}")
+        except Exception as e:
+            print(f"--> [Warning] Không parse được ngày chốt '{report_date_str}': {e}")
+
+    if not user_specified_date:
+        if auto_max_dt and auto_max_dt.month == target_month and auto_max_dt.year == target_year:
+            report_cutoff_dt = datetime.datetime(auto_max_dt.year, auto_max_dt.month, auto_max_dt.day, 23, 59, 59)
+            report_dt = datetime.datetime(auto_max_dt.year, auto_max_dt.month, auto_max_dt.day, 0, 0, 0)
+            print(f"--> [Auto Cutoff Date] Tự động phát hiện ngày giao dịch mới nhất trong hóa đơn: {report_dt.strftime('%d/%m/%Y')}")
+        else:
+            report_cutoff_dt = datetime.datetime(target_year, target_month, last_day, 23, 59, 59)
+            report_dt = datetime.datetime(target_year, target_month, last_day, 0, 0, 0)
+
+    cutoff_day = report_dt.day if (report_dt and report_dt.day > 0) else last_day
+    print(f"--> [Engine] Xử lý dữ liệu Tháng {target_month}/{target_year}: {month_start} đến {report_cutoff_dt} (Chốt ngày {cutoff_day})")
 
     # 3. Read Invoices
     print(f"--> Đọc dữ liệu hóa đơn: {hoadon_file}")
@@ -691,12 +769,32 @@ def execute_kpi_engine(hoadon_file, trahang_file, template_file, plan_file, outp
     wb_out = openpyxl.load_workbook(template_file)
     proj_sheet_name = f'Dự án T{target_month}'
 
-    # 6.1 Rename Project Sheet
+    # 6.1 Rename Project Sheet & Global Formula Sheet Reference Update
+    old_proj_sheet_names = []
     for s_name in list(wb_out.sheetnames):
         if s_name.startswith('Dự án') or s_name.startswith('Du an'):
             if s_name != proj_sheet_name:
+                old_proj_sheet_names.append(s_name)
                 wb_out[s_name].title = proj_sheet_name
             break
+
+    # Rewrite any formula referencing old project sheet names across all sheets
+    for ws in wb_out.worksheets:
+        for row in ws.iter_rows():
+            for cell in row:
+                if isinstance(cell.value, str) and cell.value.startswith('='):
+                    val = cell.value
+                    modified = False
+                    for old_name in old_proj_sheet_names:
+                        if old_name in val:
+                            val = val.replace(f"'{old_name}'", f"'{proj_sheet_name}'").replace(f"{old_name}!", f"'{proj_sheet_name}'!")
+                            modified = True
+                    new_val = re.sub(r"'?Dự án T\d+'?!?", f"'{proj_sheet_name}'!", val)
+                    if new_val != val:
+                        val = new_val
+                        modified = True
+                    if modified:
+                        cell.value = val
 
     # 6.2 Populate Sheet 'data'
     ws_data = wb_out['data']
@@ -780,7 +878,7 @@ def execute_kpi_engine(hoadon_file, trahang_file, template_file, plan_file, outp
     new_staff_keys = [k for k in sorted(data_summary.keys(), key=lambda x: (x[0], x[1])) if k not in existing_proj_keys]
     
     # Auto-append new staff to ws_proj immediately after last real staff row
-    ws_proj.cell(1, 1, datetime.date(target_year, target_month, last_day))
+    ws_proj.cell(1, 1, report_dt)
     last_real_proj = max([r for r in range(3, ws_proj.max_row + 1) if ws_proj.cell(r, 2).value and str(ws_proj.cell(r, 2).value).strip()] or [2])
     next_proj_row = last_real_proj + 1
 
@@ -863,7 +961,7 @@ def execute_kpi_engine(hoadon_file, trahang_file, template_file, plan_file, outp
     # 6.5 Sheet 'kpi dược sĩ'
     if 'kpi dược sĩ' in wb_out.sheetnames:
         ws_ds = wb_out['kpi dược sĩ']
-        ws_ds.cell(1, 3, datetime.date(target_year, target_month, last_day))
+        ws_ds.cell(1, 3, '=data!J1')
 
         template_ds_map = {}
         for r in range(3, ws_ds.max_row + 1):
@@ -885,78 +983,71 @@ def execute_kpi_engine(hoadon_file, trahang_file, template_file, plan_file, outp
                 ws_ds.cell(next_ds_row, 1, b)
                 ws_ds.cell(next_ds_row, 2, s)
                 ws_ds.cell(next_ds_row, 3, role)
-                ws_ds.cell(next_ds_row, 4, 150000)
-                ws_ds.cell(next_ds_row, 5, f"=AE{next_ds_row}")
-                ws_ds.cell(next_ds_row, 8, f"=Q{next_ds_row}")
-                ws_ds.cell(next_ds_row, 9, f"=(AD{next_ds_row}/DAY($C$1))")
-                ws_ds.cell(next_ds_row, 10, f"=I{next_ds_row}/H{next_ds_row}")
-                ws_ds.cell(next_ds_row, 11, f'=_xlfn.XLOOKUP(B{next_ds_row}, \'kpi nhà thuốc\'!$A:$A, \'kpi nhà thuốc\'!$G:$G, IF(AND(OR(C{next_ds_row}="DSXC", C{next_ds_row}="DSCD", C{next_ds_row}="DSBC", C{next_ds_row}="DSTV", C{next_ds_row}="Q.CHT"), G{next_ds_row}>=F{next_ds_row}), AD{next_ds_row} * _xlfn.IFS(AND(I{next_ds_row}>=T{next_ds_row}, E{next_ds_row}>=D{next_ds_row}), 0.015, I{next_ds_row}>=T{next_ds_row}, 0.013, AND(I{next_ds_row}>=S{next_ds_row}, E{next_ds_row}>=D{next_ds_row}), 0.013, I{next_ds_row}>=S{next_ds_row}, 0.011, AND(I{next_ds_row}>=R{next_ds_row}, E{next_ds_row}>=D{next_ds_row}), 0.012, I{next_ds_row}>=R{next_ds_row}, 0.010, TRUE, 0), 0))')
-                ws_ds.cell(next_ds_row, 12, f'=IF(C{next_ds_row}="DSTV","", IF(J{next_ds_row}<0.6, 0.8, 1))')
-                ws_ds.cell(next_ds_row, 14, f'=N(K{next_ds_row})+M{next_ds_row}')
-                ws_ds.cell(next_ds_row, 15, f'=CEILING(R{next_ds_row}, 100000)')
-                ws_ds.cell(next_ds_row, 16, f'=CEILING(S{next_ds_row}, 100000)')
-                ws_ds.cell(next_ds_row, 17, f'=CEILING(T{next_ds_row}, 100000)')
-                ws_ds.cell(next_ds_row, 18, f'=U{next_ds_row}*$R$2')
-                ws_ds.cell(next_ds_row, 19, f'=U{next_ds_row}*$S$2')
-                ws_ds.cell(next_ds_row, 20, f'=U{next_ds_row}*$T$2')
-                ws_ds.cell(next_ds_row, 21, f"=V{next_ds_row}/DAY($C$1)")
-                ws_ds.cell(next_ds_row, 22, 270000000)
-                ws_ds.cell(next_ds_row, 25, f'=IF(W{next_ds_row}>0, X{next_ds_row}/W{next_ds_row}, 0)')
-                ws_ds.cell(next_ds_row, 28, f'=IF(Z{next_ds_row}>0, AA{next_ds_row}/Z{next_ds_row}, 0)')
-                ws_ds.cell(next_ds_row, 29, f'=W{next_ds_row}+Z{next_ds_row}')
-                ws_ds.cell(next_ds_row, 30, f'=X{next_ds_row}+AA{next_ds_row}')
-                ws_ds.cell(next_ds_row, 31, f'=IF(AC{next_ds_row}>0, AD{next_ds_row}/AC{next_ds_row}, 0)')
                 next_ds_row += 1
 
-        # 6.5.1 Tính toán phân bổ chỉ tiêu hàng điểm Nhà thuốc (Cột F) cho từng nhân sự
+        # 6.5.1 Tính toán phân bổ chỉ tiêu hàng điểm Nhà thuốc (Cột F) & Chuẩn hóa toàn bộ công thức cho từng nhân sự
         da_branch_tot = defaultdict(float)
         for (b_k, s_k), r_idx in template_proj_map.items():
             p_val = merged_project_summary.get((b_k, s_k), project_summary.get((b_k, s_k), {}))
-            sum_val = (p_val.get('NY3', 0) + p_val.get('CK', 0) + p_val.get('Combo', 0)) / last_day
+            sum_val = (p_val.get('NY3', 0) + p_val.get('CK', 0) + p_val.get('Combo', 0)) / cutoff_day
             da_branch_tot[b_k] += sum_val
 
         for (b, s), r in template_ds_map.items():
-            # Tính chỉ tiêu Cột F phân bổ từ Kế hoạch hàng điểm nhà thuốc
-            p_val = merged_project_summary.get((b, s), project_summary.get((b, s), {}))
-            duan_nv = (p_val.get('NY3', 0) + p_val.get('CK', 0) + p_val.get('Combo', 0)) / last_day
-            duan_nt = da_branch_tot.get(b, 0.0)
-            tyle = (duan_nv / duan_nt) if duan_nt > 0 else 0.0
-
-            store_info = plan.stores.get(b, {})
-            kpi_rev = store_info.get('kpi_rev', 0.0)
-            hd1 = store_info.get('m1', kpi_rev * 0.8 * 0.25)
-            hd2 = store_info.get('m2', kpi_rev * 0.9 * 0.25)
-            hd3 = store_info.get('m3', kpi_rev * 1.0 * 0.25)
-            m2_d = (kpi_rev * 0.9 / last_day) if kpi_rev > 0 else 0.0
-            m3_d = (kpi_rev * 1.0 / last_day) if kpi_rev > 0 else 0.0
-
-            # Lấy doanh thu ngày thực tế
-            dt_tot = data_summary.get((b, s), {}).get('off_rev', 0.0) + data_summary.get((b, s), {}).get('onl_rev', 0.0)
-            dt_ngay = dt_tot / last_day
-
-            if dt_ngay >= m3_d and m3_d > 0:
-                hd_target = hd3
-            elif dt_ngay >= m2_d and m2_d > 0:
-                hd_target = hd2
-            else:
-                hd_target = hd1
-
-            target_ck_f = round((hd_target / last_day) * tyle, -3)
-            ws_ds.cell(r, 6, target_ck_f)
-
-            ws_ds.cell(r, 21, f"=V{r}/DAY($C$1)")
-            ws_ds.cell(r, 23, f"=IFERROR(SUMIFS(data!$C:$C, data!$A:$A, $A{r}, data!$B:$B, $B{r}), 0)")
-            ws_ds.cell(r, 24, f"=IFERROR(SUMIF(data!$B:$B, $B{r}, data!$D:$D), 0)")
-            ws_ds.cell(r, 26, f"=IFERROR(SUMIFS(data!$E:$E, data!$A:$A, $A{r}, data!$B:$B, $B{r}), 0)")
-            ws_ds.cell(r, 27, f"=IFERROR(SUMIF(data!$B:$B, $B{r}, data!$F:$F), 0)")
+            role = str(ws_ds.cell(r, 3).value or 'BC').strip()
+            cur_d = ws_ds.cell(r, 4).value
+            if not cur_d or cur_d == 0:
+                ws_ds.cell(r, 4, 245000 if role in ('BC', 'DSXC') else 150000)
+                
+            ws_ds.cell(r, 5, f"=AE{r}")
+            
+            f_hangdiem_formula = (
+                f"=IFERROR(ROUND(_xludf.LET(nt,$A{r},nv,$B{r},songay,DAY(EOMONTH($C$1,0)),doanhthungay,$I{r},"
+                f"duan_nv,SUMIFS('{proj_sheet_name}'!$D:$D,'{proj_sheet_name}'!$A:$A,nt,'{proj_sheet_name}'!$B:$B,nv),"
+                f"duan_nt,SUMIFS('{proj_sheet_name}'!$D:$D,'{proj_sheet_name}'!$A:$A,nt),"
+                f"tyle,duan_nv/duan_nt,"
+                f"muc2_ngay,_xlfn.XLOOKUP(nt,'kpi nhà thuốc'!$B:$B,'kpi nhà thuốc'!$P:$P),"
+                f"muc3_ngay,_xlfn.XLOOKUP(nt,'kpi nhà thuốc'!$B:$B,'kpi nhà thuốc'!$T:$T),"
+                f"hangdiem1,_xlfn.XLOOKUP(nt,'kpi nhà thuốc'!$B:$B,'kpi nhà thuốc'!$I:$I),"
+                f"hangdiem2,_xlfn.XLOOKUP(nt,'kpi nhà thuốc'!$B:$B,'kpi nhà thuốc'!$N:$N),"
+                f"hangdiem3,_xlfn.XLOOKUP(nt,'kpi nhà thuốc'!$B:$B,'kpi nhà thuốc'!$R:$R),"
+                f"_xludf.SWITCH(TRUE,doanhthungay>=muc3_ngay,hangdiem3,doanhthungay>=muc2_ngay,hangdiem2,TRUE,hangdiem1)/songay*tyle),-3),0)"
+            )
+            ws_ds.cell(r, 6, f_hangdiem_formula)
             ws_ds.cell(r, 7, f"=IFERROR(SUMIF('{proj_sheet_name}'!$B:$B, $B{r}, '{proj_sheet_name}'!$D:$D), 0)")
-            ws_ds.cell(r, 11, f'=_xlfn.XLOOKUP(B{r}, \'kpi nhà thuốc\'!$A:$A, \'kpi nhà thuốc\'!$G:$G, IF(AND(OR(C{r}="DSXC", C{r}="DSCD", C{r}="DSBC", C{r}="DSTV", C{r}="Q.CHT"), G{r}>=F{r}), AD{r} * _xlfn.IFS(AND(I{r}>=T{r}, E{r}>=D{r}), 0.015, I{r}>=T{r}, 0.013, AND(I{r}>=S{r}, E{r}>=D{r}), 0.013, I{r}>=S{r}, 0.011, AND(I{r}>=R{r}, E{r}>=D{r}), 0.012, I{r}>=R{r}, 0.010, TRUE, 0), 0))')
+            ws_ds.cell(r, 8, f"=Q{r}")
+            ws_ds.cell(r, 9, f"=(AD{r}/DAY($C$1))")
+            ws_ds.cell(r, 10, f"=_xlfn.XLOOKUP(B{r}, 'kpi nhà thuốc'!A:A, 'kpi nhà thuốc'!F:F, (AD{r}/DAY($C$1))/U{r})")
+            ws_ds.cell(r, 11, f'=_xlfn.XLOOKUP(B{r}, \'kpi nhà thuốc\'!$A:$A, \'kpi nhà thuốc\'!$G:$G, IF(AND(OR(C{r}="DSXC", C{r}="DSCD", C{r}="DSBC", C{r}="DSTV", C{r}="Q.CHT", C{r}="BC", C{r}="DSHV"), G{r}>=F{r}), AD{r} * _xlfn.IFS(AND(I{r}>=T{r}, E{r}>=D{r}), 0.015, I{r}>=T{r}, 0.013, AND(I{r}>=S{r}, E{r}>=D{r}), 0.013, I{r}>=S{r}, 0.011, AND(I{r}>=R{r}, E{r}>=D{r}), 0.012, I{r}>=R{r}, 0.010, TRUE, 0), 0))')
+            ws_ds.cell(r, 12, f'=IF(C{r}="DSTV","", IF(J{r}<0.6, 0.8, 1))')
             ws_ds.cell(r, 13, f"=IFERROR(SUMIF('{proj_sheet_name}'!$B:$B, $B{r}, '{proj_sheet_name}'!$M:$M)*$L{r}, 0)")
             ws_ds.cell(r, 14, f'=N(K{r})+M{r}')
+            ws_ds.cell(r, 15, f'=CEILING(R{r}, 100000)')
+            ws_ds.cell(r, 16, f'=CEILING(S{r}, 100000)')
+            ws_ds.cell(r, 17, f'=CEILING(T{r}, 100000)')
+            ws_ds.cell(r, 18, f'=U{r}*$R$2')
+            ws_ds.cell(r, 19, f'=U{r}*$S$2')
+            ws_ds.cell(r, 20, f'=U{r}*$T$2')
+            ws_ds.cell(r, 21, f"=V{r}/DAY($C$1)")
+            
+            cur_v = ws_ds.cell(r, 22).value
+            if not cur_v or cur_v == 0:
+                st_tgt = plan.staff_by_key.get((b, s), {}).get('kpi_thang', 270000000)
+                ws_ds.cell(r, 22, st_tgt)
+                
+            ws_ds.cell(r, 23, f"=IFERROR(SUMIFS(data!$C:$C, data!$A:$A, $A{r}, data!$B:$B, $B{r}), 0)")
+            ws_ds.cell(r, 24, f"=IFERROR(SUMIF(data!$B:$B, $B{r}, data!$D:$D), 0)")
+            ws_ds.cell(r, 25, f'=IF(W{r}>0, X{r}/W{r}, 0)')
+            ws_ds.cell(r, 26, f"=IFERROR(SUMIFS(data!$E:$E, data!$A:$A, $A{r}, data!$B:$B, $B{r}), 0)")
+            ws_ds.cell(r, 27, f"=IFERROR(SUMIF(data!$B:$B, $B{r}, data!$F:$F), 0)")
+            ws_ds.cell(r, 28, f'=IF(Z{r}>0, AA{r}/Z{r}, 0)')
+            ws_ds.cell(r, 29, f'=W{r}+Z{r}')
+            ws_ds.cell(r, 30, f'=X{r}+AA{r}')
+            ws_ds.cell(r, 31, f'=IF(AC{r}>0, AD{r}/AC{r}, 0)')
 
     # 6.6 Sheet 'kpi nhà thuốc'
     if 'kpi nhà thuốc' in wb_out.sheetnames:
         ws_nt = wb_out['kpi nhà thuốc']
+        ws_nt.cell(1, 4, 'Dữ liệu cập nhật đến ngày')
         ws_nt.cell(1, 6, "='kpi dược sĩ'!$C$1")
         ws_nt.cell(1, 20, "='kpi dược sĩ'!$C$1")
         
@@ -964,6 +1055,11 @@ def execute_kpi_engine(hoadon_file, trahang_file, template_file, plan_file, outp
         while nt_row <= ws_nt.max_row:
             b_val = ws_nt.cell(nt_row, 2).value
             if b_val and str(b_val).strip():
+                clean_b = clean_branch_name(b_val)
+                if clean_b in plan.stores and plan.stores[clean_b].get('kpi_rev', 0) > 0:
+                    if not ws_nt.cell(nt_row, 3).value or ws_nt.cell(nt_row, 3).value == 0:
+                        ws_nt.cell(nt_row, 3, plan.stores[clean_b]['kpi_rev'])
+                ws_nt.cell(nt_row, 20, f"=C{nt_row}/DAY('kpi dược sĩ'!$C$1)")
                 ws_nt.cell(nt_row, 21, f"=SUMIF('{proj_sheet_name}'!$A:$A, B{nt_row}, '{proj_sheet_name}'!$D:$D)*DAY($F$1)")
             nt_row += 1
 
@@ -978,9 +1074,17 @@ def execute_kpi_engine(hoadon_file, trahang_file, template_file, plan_file, outp
     except Exception:
         pass
 
-    wb_out.save(output_file)
-    wb_out.close()
-    print(f"--> Báo cáo KPI xuất thành công ra: {output_file}")
+    try:
+        wb_out.save(output_file)
+        print(f"--> Báo cáo KPI xuất thành công ra: {output_file}")
+    except PermissionError:
+        base, ext = os.path.splitext(output_file)
+        fallback_path = f"{base}_new{ext}"
+        wb_out.save(fallback_path)
+        print(f"⚠️ File đang mở trong Excel, đã lưu thành công vào: {fallback_path}")
+        output_file = fallback_path
+    finally:
+        wb_out.close()
 
     # Build rich statistics dictionary for Web App & downstream callers
     branch_stats = {}

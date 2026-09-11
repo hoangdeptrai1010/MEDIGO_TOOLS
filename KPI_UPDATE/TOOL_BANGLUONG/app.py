@@ -95,8 +95,10 @@ def process_payroll_from_upload(timecard_bytes=None, kpi_bytes=None, hoadon_byte
                 f.write(kpi_bytes)
         else:
             cand_list = [
+                os.path.join(m_folder, 'output', f'baocaokpi_thang{month_selected}_hoanthien.xlsx'),
                 os.path.join(PARENT_DIR, f'baocaokpi_thang{month_selected}_hoanthien.xlsx'),
-                os.path.join(m_folder, f'baocaokpi_thang{month_selected}_hoanthien.xlsx')
+                os.path.join(m_folder, f'baocaokpi_thang{month_selected}_hoanthien.xlsx'),
+                os.path.join(PARENT_DIR, f'thang{month_selected}', 'output', f'baocaokpi_thang{month_selected}_hoanthien.xlsx')
             ]
             kpi_path = next((c for c in cand_list if os.path.exists(c)), None)
 
@@ -108,6 +110,7 @@ def process_payroll_from_upload(timecard_bytes=None, kpi_bytes=None, hoadon_byte
                 f.write(hoadon_bytes)
         else:
             cand_list = [
+                os.path.join(m_folder, 'DATA', f'DanhSachChiTietHoaDon_31{month_selected}2026.xlsx'),
                 os.path.join(m_folder, 'DATA', 'DanhSachChiTietHoaDon_3182026.xlsx'),
                 os.path.join(m_folder, 'DanhSachChiTietHoaDon_3182026.xlsx')
             ]
@@ -121,6 +124,7 @@ def process_payroll_from_upload(timecard_bytes=None, kpi_bytes=None, hoadon_byte
                 f.write(trahang_bytes)
         else:
             cand_list = [
+                os.path.join(m_folder, 'DATA', f'DanhSachChiTietTraHang_31{month_selected}2026.xlsx'),
                 os.path.join(m_folder, 'DATA', 'DanhSachChiTietTraHang_3182026.xlsx'),
                 os.path.join(m_folder, 'DanhSachChiTietTraHang_3182026.xlsx')
             ]
@@ -134,8 +138,10 @@ def process_payroll_from_upload(timecard_bytes=None, kpi_bytes=None, hoadon_byte
                 f.write(template_bytes)
         else:
             cand_list = [
-                os.path.join(m_folder, 'tinhcongnhungthuongchia.xlsx'),
-                os.path.join(m_folder, 'chiacongnhunggomthuong.xlsx'),
+                os.path.join(m_folder, 'output', f'bangluong_thang{month_selected}_hoanthien.xlsx'),
+                os.path.join(m_folder, 'output', f'BANGLUONGTHANG{month_selected}_hoanthien.xlsx'),
+                os.path.join(PARENT_DIR, f'thang{month_selected}', 'output', f'bangluong_thang{month_selected}_hoanthien.xlsx'),
+                os.path.join(PARENT_DIR, 'thang7', 'target', 'BẢNG LƯƠNG THÁNG 7 2026.xlsx'),
                 os.path.join(m_folder, f'BANGLUONGTHANG{month_selected}.xlsx'),
                 os.path.join(m_folder, f'BẢNG LƯƠNG THÁNG {month_selected} 2026.xlsx'),
                 os.path.join(PARENT_DIR, f'thang{month_selected}', f'BẢNG LƯƠNG THÁNG {month_selected} 2026.xlsx')
@@ -215,6 +221,15 @@ def process_payroll_from_upload(timecard_bytes=None, kpi_bytes=None, hoadon_byte
                             'ck_reward': float(ck_rw) if isinstance(ck_rw, (int, float)) else 0
                         })
         wb_check.close()
+        try:
+            month_out_dir = os.path.join(PARENT_DIR, f"thang{month_selected}", "output")
+            os.makedirs(month_out_dir, exist_ok=True)
+            saved_month_file = os.path.join(month_out_dir, f"BANGLUONGTHANG{month_selected}_hoanthien.xlsx")
+            with open(saved_month_file, "wb") as f_p:
+                f_p.write(generated_bytes)
+            print(f"--> [Output] Đã lưu bảng lương vào thư mục tháng: {saved_month_file}")
+        except Exception as e:
+            print(f"--> [Warning] Không thể lưu bảng lương vào thư mục tháng: {e}")
 
     return payroll_stats, generated_bytes
 

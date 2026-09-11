@@ -270,6 +270,12 @@ def parse_hn_proposal(hn_file_path, month_num=9):
     col_tb = next((c for c, h in headers.items() if 'trung binh bill' in h or 'tb bill' in h or 'tbbill' in h), 4)
     col_ck = next((c for c, h in headers.items() if 'ck' in h or 'combo' in h or 'ny3' in h), 5)
     col_rev_ngay = next((c for c, h in headers.items() if 'doanh thu/ngay (100%)' in h or ('doanh thu/ngay' in h and 'thuc' not in h) or 'kpi doanh thu/ngay' in h), 7)
+    
+    col_target = next((c for c, h in headers.items() if f'thang {month_num}' in h or f'thang {month_num:02d}' in h or f't{month_num}' in h or f'kpis doanh thu/thang {month_num}' in h), None)
+    if not col_target:
+        col_target = next((c for c, h in headers.items() if 'doanh thu/thang' in h or 'kpi thang' in h), None)
+
+    col_nt = next((c for c, h in headers.items() if f'nt thang {month_num}' in h or f'nt thang {month_num:02d}' in h or 'nt thang' in h or 'target nt' in h), None)
 
     days_in_month = calendar.monthrange(2026, month_num)[1]
     staff_list = []
@@ -283,15 +289,23 @@ def parse_hn_proposal(hn_file_path, month_num=9):
         tb_v = ws.cell(r, col_tb).value
         ck_v = ws.cell(r, col_ck).value if col_ck else 0
         rev_ngay_v = ws.cell(r, col_rev_ngay).value if col_rev_ngay else 0
+        tgt_v = ws.cell(r, col_target).value if col_target else 0
+        nt_v = ws.cell(r, col_nt).value if col_nt else 0
         
         if st_v:
             current_store = clean_branch_name(str(st_v))
             
+        if nt_v and current_store:
+            try:
+                store_targets[current_store] = float(nt_v)
+            except Exception:
+                pass
+                
         if name_v and current_store:
             s_name = str(name_v).strip()
             if s_name and s_name.lower() not in ('nhan vien', 'tong', 'none', 'tong cong', 'dược sĩ', 'nhân viên'):
                 rev_ngay = float(rev_ngay_v or 0) if isinstance(rev_ngay_v, (int, float)) else 0.0
-                kpi_thang = rev_ngay * days_in_month if rev_ngay > 0 else 0.0
+                kpi_thang = float(tgt_v or 0) if isinstance(tgt_v, (int, float)) and float(tgt_v) > 0 else (rev_ngay * days_in_month if rev_ngay > 0 else 0.0)
                 staff_list.append({
                     'store': current_store,
                     'name': s_name,
@@ -303,22 +317,11 @@ def parse_hn_proposal(hn_file_path, month_num=9):
                     'region': 'HN'
                 })
                 
-    if 'KPI' in wb.sheetnames:
-        ws_kpi = wb['KPI']
-        for r in range(3, 16):
-            if ws_kpi.cell(r, 1).value == month_num:
-                hb_target = ws_kpi.cell(r, 3).value or ws_kpi.cell(r, 2).value
-                dl_target = ws_kpi.cell(r, 8).value or ws_kpi.cell(r, 7).value
-                if hb_target and float(hb_target) > 0:
-                    store_targets['Hàng Bông'] = float(hb_target)
-                if dl_target and float(dl_target) > 0:
-                    store_targets['Đường Láng'] = float(dl_target)
-                break
-                
-    if 'Hàng Bông' not in store_targets:
-        store_targets['Hàng Bông'] = 694660398.0 if month_num == 9 else 574089563.0
-    if 'Đường Láng' not in store_targets:
-        store_targets['Đường Láng'] = 516743207.0 if month_num == 9 else 492042962.0
+    # Fallback store targets for Hanoi branches if not detected in columns
+    if 'Hàng Bông' not in store_targets or store_targets['Hàng Bông'] <= 0:
+        store_targets['Hàng Bông'] = 1350000000.0 if month_num == 9 else 1270000000.0
+    if 'Đường Láng' not in store_targets or store_targets['Đường Láng'] <= 0:
+        store_targets['Đường Láng'] = 1100000000.0 if month_num == 9 else 980000000.0
         
     wb.close()
     return staff_list, store_targets
@@ -392,7 +395,9 @@ def generate_kpisheet_package(
 
     period_str = f"2026-{month_num:02d}"
     if not output_filepath:
-        output_filepath = os.path.join(OUTPUT_DIR, f"NHÀ THUỐC THÁNG {month_num} 2026.xlsx")
+        month_out_dir = os.path.join(BASE_DIR, '..', f"thang{month_num}", "output")
+        os.makedirs(month_out_dir, exist_ok=True)
+        output_filepath = os.path.join(month_out_dir, f"NHÀ THUỐC THÁNG {month_num} 2026.xlsx")
         
     days_in_month = calendar.monthrange(2026, month_num)[1]
     start_date = datetime.datetime(2026, month_num, 1, 0, 0)
@@ -505,6 +510,8 @@ def generate_kpisheet_package(
                     cell.alignment = Alignment(horizontal='right')
             current_data_row += 1
 
+    ws_data.cell(1, 10, value=end_date).number_format = 'dd/mm/yyyy'
+
     # ==============================================================================
     # SHEET 2: kpi dược sĩ (Tô màu trực quan theo cụm chỉ tiêu, hoàn thành, tiền thưởng)
     # ==============================================================================
@@ -513,9 +520,8 @@ def generate_kpisheet_package(
     # Row 1: Header Note & Date
     c_note = ws_ds.cell(1, 1, value='Dữ liệu cập nhật đến ngày')
     c_note.font = font_bold
-    c_date = ws_ds.cell(1, 3, value=end_date)
+    c_date = ws_ds.cell(1, 3, value='=data!J1')
     c_date.font = font_bold
-    c_date.number_format = 'dd/mm/yyyy'
     
     # Row 2: Headers
     ds_headers = [
@@ -579,38 +585,53 @@ def generate_kpisheet_package(
         tb_bill = s['tb_bill'] or (245000 if role in ('BC', 'DSXC') else 150000)
         target_month = s['kpi_thang'] or 270000000
         
-        tier_kpi_formula = (
-            f"=IF(J{r}>=Q{r}, 1200000, IF(J{r}>=P{r}, 700000, IF(J{r}>=O{r}, 500000, 0)))"
+        f_hangdiem_formula = (
+            f"=IFERROR(ROUND(_xludf.LET(nt,$A{r},nv,$B{r},songay,DAY(EOMONTH($C$1,0)),doanhthungay,$I{r},"
+            f"duan_nv,SUMIFS('{proj_sheet_name}'!$D:$D,'{proj_sheet_name}'!$A:$A,nt,'{proj_sheet_name}'!$B:$B,nv),"
+            f"duan_nt,SUMIFS('{proj_sheet_name}'!$D:$D,'{proj_sheet_name}'!$A:$A,nt),"
+            f"tyle,duan_nv/duan_nt,"
+            f"muc2_ngay,_xlfn.XLOOKUP(nt,'kpi nhà thuốc'!$B:$B,'kpi nhà thuốc'!$P:$P),"
+            f"muc3_ngay,_xlfn.XLOOKUP(nt,'kpi nhà thuốc'!$B:$B,'kpi nhà thuốc'!$T:$T),"
+            f"hangdiem1,_xlfn.XLOOKUP(nt,'kpi nhà thuốc'!$B:$B,'kpi nhà thuốc'!$I:$I),"
+            f"hangdiem2,_xlfn.XLOOKUP(nt,'kpi nhà thuốc'!$B:$B,'kpi nhà thuốc'!$N:$N),"
+            f"hangdiem3,_xlfn.XLOOKUP(nt,'kpi nhà thuốc'!$B:$B,'kpi nhà thuốc'!$R:$R),"
+            f"_xludf.SWITCH(TRUE,doanhthungay>=muc3_ngay,hangdiem3,doanhthungay>=muc2_ngay,hangdiem2,TRUE,hangdiem1)/songay*tyle),-3),0)"
         )
-        
+
+        kpi_bonus_formula = (
+            f'=_xlfn.XLOOKUP(B{r}, \'kpi nhà thuốc\'!$A:$A, \'kpi nhà thuốc\'!$G:$G, '
+            f'IF(AND(OR(C{r}="DSXC", C{r}="DSCD", C{r}="DSBC", C{r}="DSTV", C{r}="Q.CHT", C{r}="BC"), G{r}>=F{r}), '
+            f'AD{r} * _xlfn.IFS(AND(I{r}>=T{r}, E{r}>=D{r}), 0.015, I{r}>=T{r}, 0.013, AND(I{r}>=S{r}, E{r}>=D{r}), 0.013, I{r}>=S{r}, 0.011, AND(I{r}>=R{r}, E{r}>=D{r}), 0.012, I{r}>=R{r}, 0.010, TRUE, 0), 0))'
+        )
+
         ws_ds.append([
             st_name,                                              # A: Nhà thuốc
             emp_name,                                             # B: Nhân viên
             role,                                                 # C: Chức danh
             tb_bill,                                              # D: KPI trung bình bill
             f"=AE{r}",                                            # E: Trung bình bill
-            f"=VLOOKUP(B{r}, '{proj_sheet_name}'!$B:$D, 3, 0)",    # F: KPI doanh thu CK+Combo+NY3/ngày
-            f"=VLOOKUP(B{r}, '{proj_sheet_name}'!$B:$D, 3, 0)",    # G: CK + Combo + NY3/ngày
+            f_hangdiem_formula,                                   # F: KPI doanh thu CK+Combo+NY3/ngày
+            f"=IFERROR(SUMIF('{proj_sheet_name}'!$B:$B, $B{r}, '{proj_sheet_name}'!$D:$D), 0)", # G: CK + Combo + NY3/ngày
             f"=Q{r}",                                             # H: KPI Doanh thu/ngày (100%)
             f"=(AD{r}/DAY($C$1))",                                # I: Doanh thu thực/ngày
-            f"=I{r}/H{r}",                                        # J: % Hoàn thành KPI
-            tier_kpi_formula,                                     # K: Thưởng KPI
+            f"=_xlfn.XLOOKUP(B{r}, 'kpi nhà thuốc'!A:A, 'kpi nhà thuốc'!F:F, (AD{r}/DAY($C$1))/U{r})", # J: % Hoàn thành KPI
+            kpi_bonus_formula,                                    # K: Thưởng KPI
             f'=IF(C{r}="DSTV","", IF(J{r}<0.6, 0.8, 1))',         # L: Hệ số * Dự án
-            f"=VLOOKUP(B{r}, '{proj_sheet_name}'!$B:$M, 12, 0)",  # M: Thưởng Dự án
-            f"=K{r}+M{r}*L{r}",                                   # N: Thưởng Dự án + KPI + HH
+            f"=IFERROR(SUMIF('{proj_sheet_name}'!$B:$B, $B{r}, '{proj_sheet_name}'!$M:$M)*$L{r}, 0)", # M: Thưởng Dự án
+            f"=N(K{r})+M{r}",                                     # N: Thưởng Dự án + KPI + HH
             f"=CEILING(R{r}, 100000)",                            # O: Mức 1 (80%)
             f"=CEILING(S{r}, 100000)",                            # P: Mức 2 (90%)
             f"=CEILING(T{r}, 100000)",                            # Q: Mức 3 (100%)
             f"=U{r}*$R$2",                                        # R: 0.8 * ngày
             f"=U{r}*$S$2",                                        # S: 0.9 * ngày
             f"=U{r}*$T$2",                                        # T: 1.0 * ngày
-            f"=V{r}/DAY('kpi nhà thuốc'!$T$1)",                   # U: KPIs Doanh thu/ngày
+            f"=V{r}/DAY($C$1)",                                   # U: KPIs Doanh thu/ngày
             target_month,                                         # V: KPIs Doanh thu/tháng
-            f"=SUMIF(data!$B:$B, B{r}, data!$C:$C)",              # W: Số giao dịch off
-            f"=SUMIF(data!$B:$B, B{r}, data!$D:$D)",              # X: Doanh thu off
+            f"=IFERROR(SUMIFS(data!$C:$C, data!$A:$A, $A{r}, data!$B:$B, $B{r}), 0)", # W: Số giao dịch off
+            f"=IFERROR(SUMIF(data!$B:$B, $B{r}, data!$D:$D), 0)", # X: Doanh thu off
             f"=IF(W{r}>0, X{r}/W{r}, 0)",                         # Y: Trung bình bill off
-            f"=SUMIF(data!$B:$B, B{r}, data!$E:$E)",              # Z: Số giao dịch onl
-            f"=SUMIF(data!$B:$B, B{r}, data!$F:$F)",              # AA: Doanh thu onl
+            f"=IFERROR(SUMIFS(data!$E:$E, data!$A:$A, $A{r}, data!$B:$B, $B{r}), 0)", # Z: Số giao dịch onl
+            f"=IFERROR(SUMIF(data!$B:$B, $B{r}, data!$F:$F), 0)", # AA: Doanh thu onl
             f"=IF(Z{r}>0, AA{r}/Z{r}, 0)",                        # AB: Trung bình bill onl
             f"=W{r}+Z{r}",                                        # AC: Tổng giao dịch
             f"=X{r}+AA{r}",                                       # AD: Doanh thu tổng
@@ -655,8 +676,8 @@ def generate_kpisheet_package(
     
     # Row 1: Dates
     ws_nt.cell(1, 4, value='Dữ liệu cập nhật đến ngày').font = font_bold
-    ws_nt.cell(1, 6, value=end_date).number_format = 'dd/mm/yyyy'
-    ws_nt.cell(1, 20, value=end_date).number_format = 'dd/mm/yyyy'
+    ws_nt.cell(1, 6, value="='kpi dược sĩ'!$C$1")
+    ws_nt.cell(1, 20, value="='kpi dược sĩ'!$C$1")
     
     # Row 2: Headers
     nt_headers = [
@@ -785,7 +806,7 @@ def generate_kpisheet_package(
     ws_proj = wb.create_sheet(proj_sheet_name)
     
     # Row 1: Date
-    ws_proj.cell(1, 1, value=end_date).number_format = 'dd/mm/yyyy'
+    ws_proj.cell(1, 1, value="='kpi dược sĩ'!$C$1")
     ws_proj.cell(1, 1).font = font_bold
     
     # Row 2: Headers
@@ -845,7 +866,7 @@ def generate_kpisheet_package(
             st_name,                                  # A: Nhà thuốc
             emp_name,                                 # B: Nhân viên
             role,                                     # C: Chức danh
-            f"=SUM(F{r}:G{r})/DAY($A$1)",             # D: CK + Combo + NY3/ngày
+            f"=SUM(E{r}:G{r})/DAY($A$1)",             # D: CK + Combo + NY3/ngày
             0,                                        # E: NY3
             0,                                        # F: Chiết khấu
             0,                                        # G: Combo Liều
@@ -907,27 +928,17 @@ def generate_kpisheet_package(
         cell.alignment = Alignment(horizontal='center', vertical='center')
         cell.border = border_header
 
-    # Auto-fit Column Widths with Comfortable Padding
-    for ws in [ws_data, ws_ds, ws_nt, ws_proj, ws_hot]:
-        ws.views.sheetView[0].showGridLines = True
-        for col in ws.columns:
-            col_letter = get_column_letter(col[0].column)
-            max_len = 0
-            for cell in col[:15]:
-                val = str(cell.value or '')
-                if len(val) > max_len:
-                    max_len = len(val)
-            ws.column_dimensions[col_letter].width = max(max_len + 5, 14)
-
-    # Apply full unified KPI styling
+    # Apply full unified KPI styling (Times New Roman, Pastel Fills, Column Widths, Freeze Panes)
     try:
         apply_full_kpi_styling(wb)
     except Exception as e:
         print(f"⚠️ [Styling Warning] {e}")
 
-    # Save output with graceful permission handling
+    # Save output strictly to target file only
+    os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
     try:
         wb.save(output_filepath)
+        print(f"--> [Output] Đã lưu file duy nhất vào thư mục tháng: {output_filepath}")
     except PermissionError:
         base, ext = os.path.splitext(output_filepath)
         fallback_path = f"{base}_new{ext}"
@@ -935,20 +946,6 @@ def generate_kpisheet_package(
         print(f"⚠️ File đang mở trong Excel, đã lưu thành công vào: {fallback_path}")
         output_filepath = fallback_path
 
-    # Sync to plans/ and goc/
-    plans_dir = os.path.join(BASE_DIR, '..', 'plans')
-    goc_dir = os.path.join(BASE_DIR, '..', 'goc')
-    tool_kpi_plans = os.path.join(BASE_DIR, '..', 'TOOL_KPI', 'plans')
-    
-    for dest_dir in [plans_dir, goc_dir, tool_kpi_plans]:
-        if os.path.exists(dest_dir):
-            dest_file = os.path.join(dest_dir, os.path.basename(output_filepath))
-            try:
-                wb.save(dest_file)
-                print(f"--> [Sync] Đã đồng bộ sang {dest_file}")
-            except PermissionError:
-                pass
-            
     wb.close()
     
     return {

@@ -212,18 +212,17 @@ def scan_folder_for_project_data(folder_path):
 # ==============================================================================
 def parse_hcm_kpi_proposal(hcm_file_path, month_num=9):
     """
-    Trích xuất danh sách nhân sự, chỉ tiêu doanh thu, bill, số đơn và KPI nhà thuốc từ file QL HCM.
+    Trích xuất danh sách nhân sự, chỉ tiêu doanh thu, bill từ file QL HCM.
     """
     if not os.path.exists(hcm_file_path):
         raise FileNotFoundError(f"Không tìm thấy file KPI HCM tại: {hcm_file_path}")
         
     wb = openpyxl.load_workbook(hcm_file_path, data_only=True)
     
-    # Tìm sheet chỉ tiêu tháng
     target_sheet = None
     for name in wb.sheetnames:
-        n_lower = name.lower()
-        if 'kpi' in n_lower and (f'tháng {month_num:02d}' in n_lower or f'tháng {month_num}' in n_lower or f't{month_num}' in n_lower):
+        n_low = name.lower()
+        if 'kpi' in n_low and (f'thang {month_num:02d}' in n_low or f'thang {month_num}' in n_low or f't{month_num}' in n_low or f'tháng {month_num}' in n_low):
             target_sheet = name
             break
     if not target_sheet:
@@ -235,40 +234,65 @@ def parse_hcm_kpi_proposal(hcm_file_path, month_num=9):
         target_sheet = wb.sheetnames[-1]
         
     ws = wb[target_sheet]
-    print(f"--> [HCM Proposal] Đang nạp từ Sheet: [{target_sheet}]")
+    print(f"--> [HCM Proposal] Đang nạp từ Sheet: [{target_sheet}] (Tháng {month_num})")
     
+    h_row = 1
+    for r in range(1, min(5, ws.max_row + 1)):
+        row_str = " ".join([str(ws.cell(r, c).value or '') for c in range(1, 15)]).lower()
+        if 'nhan vien' in row_str or 'duoc si' in row_str or 'nhân viên' in row_str or 'dược sĩ' in row_str:
+            h_row = r
+            break
+
+    headers = {}
+    for c in range(1, ws.max_column + 1):
+        v = ws.cell(h_row, c).value
+        if v is not None and str(v).strip():
+            headers[c] = str(v).lower().strip()
+
+    col_store = next((c for c, h in headers.items() if 'nha thuoc' in h or 'chi nhanh' in h or 'nhà thuốc' in h or 'chi nhánh' in h), 1)
+    col_name = next((c for c, h in headers.items() if 'nhan vien' in h or 'duoc si' in h or 'nhân viên' in h or 'dược sĩ' in h), 2)
+    col_role = next((c for c, h in headers.items() if 'chuc danh' in h or 'vi tri' in h or 'chức danh' in h or 'vị trí' in h), 3)
+    col_tb = next((c for c, h in headers.items() if 'trung binh bill' in h or 'tb bill' in h or 'tbbill' in h or 'trung bình bill' in h), 4)
+    col_gd = next((c for c, h in headers.items() if 'giao dich' in h or 'gd' in h or 'giao dịch' in h), 5)
+    
+    col_target = next((c for c, h in headers.items() if f'thang {month_num}' in h or f'thang {month_num:02d}' in h or f't{month_num}' in h or f'tháng {month_num}' in h), None)
+    if not col_target:
+        col_target = next((c for c, h in headers.items() if 'doanh thu/thang' in h or 'kpi thang' in h or 'doanh thu/tháng' in h or 'kpi tháng' in h), 7)
+        
+    col_nt = next((c for c, h in headers.items() if 'nt thang' in h or 'nha thuoc thang' in h or 'target nt' in h or 'nt tháng' in h or 'nhà thuốc tháng' in h), None)
+
     staff_list = []
     store_targets = {}
     current_store = ''
     
-    for r in range(2, ws.max_row + 1):
-        store_val = ws.cell(r, 1).value
-        staff_val = ws.cell(r, 2).value
-        role_val = ws.cell(r, 3).value
-        tb_bill = ws.cell(r, 4).value
-        giao_dich_ngay = ws.cell(r, 5).value
-        kpi_thang = ws.cell(r, 7).value or ws.cell(r, 6).value
-        nt_thang = ws.cell(r, 8).value
+    for r in range(h_row + 1, ws.max_row + 1):
+        st_v = ws.cell(r, col_store).value
+        name_v = ws.cell(r, col_name).value
+        role_v = ws.cell(r, col_role).value
+        tb_v = ws.cell(r, col_tb).value
+        gd_v = ws.cell(r, col_gd).value if col_gd else 0
+        tgt_v = ws.cell(r, col_target).value if col_target else 0
+        nt_v = ws.cell(r, col_nt).value if col_nt else 0
         
-        if store_val:
-            current_store = clean_branch_name(str(store_val))
+        if st_v:
+            current_store = clean_branch_name(str(st_v))
             
-        if nt_thang and current_store:
+        if nt_v and current_store:
             try:
-                store_targets[current_store] = float(nt_thang)
+                store_targets[current_store] = float(nt_v)
             except Exception:
                 pass
                 
-        if staff_val and current_store:
-            s_name = str(staff_val).strip()
-            if s_name and s_name.lower() not in ('nhân viên', 'tổng', 'none'):
+        if name_v and current_store:
+            s_name = str(name_v).strip()
+            if s_name and s_name.lower() not in ('nhan vien', 'tong', 'none', 'tong cong', 'dược sĩ', 'nhân viên', 'tổng'):
                 staff_list.append({
                     'store': current_store,
                     'name': s_name,
-                    'role': str(role_val or 'NV').strip(),
-                    'tb_bill': float(tb_bill or 0),
-                    'giao_dich_ngay': float(giao_dich_ngay or 0),
-                    'kpi_thang': float(kpi_thang or 0),
+                    'role': str(role_v or 'NV').strip(),
+                    'tb_bill': float(tb_v or 0) if isinstance(tb_v, (int, float)) else 0.0,
+                    'giao_dich_ngay': float(gd_v or 0) if isinstance(gd_v, (int, float)) else 0.0,
+                    'kpi_thang': float(tgt_v or 0) if isinstance(tgt_v, (int, float)) else 0.0,
                     'region': 'HCM'
                 })
                 
@@ -277,78 +301,100 @@ def parse_hcm_kpi_proposal(hcm_file_path, month_num=9):
 
 def parse_hn_kpi_proposal(hn_file_path, month_num=9):
     """
-    Trích xuất danh sách nhân sự, chỉ tiêu doanh thu, bill, CK/ngày và KPI nhà thuốc từ file QL HN.
+    Trích xuất danh sách nhân sự, chỉ tiêu doanh thu, bill từ file QL HN.
     """
     if not os.path.exists(hn_file_path):
         raise FileNotFoundError(f"Không tìm thấy file KPI HN tại: {hn_file_path}")
         
     wb = openpyxl.load_workbook(hn_file_path, data_only=True)
     
-    # Tìm sheet chỉ tiêu tháng
     target_sheet = None
     for name in wb.sheetnames:
-        n_lower = name.lower()
-        if n_lower.startswith(f't{month_num:02d}.') or n_lower.startswith(f't{month_num}.') or n_lower == f't{month_num}':
+        n_low = name.lower()
+        if n_low.startswith(f't{month_num:02d}.') or n_low.startswith(f't{month_num}.') or n_low == f't{month_num}' or f'thang {month_num}' in n_low or f'tháng {month_num}' in n_low:
             target_sheet = name
             break
     if not target_sheet:
         for name in wb.sheetnames:
-            if name.lower().startswith('t8') or name.lower().startswith('t9'):
+            if name.lower().startswith('t8') or name.lower().startswith('t9') or name.lower().startswith('t'):
                 target_sheet = name
                 break
     if not target_sheet:
         target_sheet = wb.sheetnames[-1]
         
     ws = wb[target_sheet]
-    print(f"--> [HN Proposal] Đang nạp từ Sheet: [{target_sheet}]")
+    print(f"--> [HN Proposal] Đang nạp từ Sheet: [{target_sheet}] (Tháng {month_num})")
     
+    h_row = 1
+    for r in range(1, min(5, ws.max_row + 1)):
+        row_str = " ".join([str(ws.cell(r, c).value or '') for c in range(1, 15)]).lower()
+        if 'nhan vien' in row_str or 'duoc si' in row_str or 'nhân viên' in row_str or 'dược sĩ' in row_str:
+            h_row = r
+            break
+
+    headers = {}
+    for c in range(1, ws.max_column + 1):
+        v = ws.cell(h_row, c).value
+        if v is not None and str(v).strip():
+            headers[c] = str(v).lower().strip()
+
+    col_store = next((c for c, h in headers.items() if 'nha thuoc' in h or 'chi nhanh' in h or 'nhà thuốc' in h or 'chi nhánh' in h), 1)
+    col_name = next((c for c, h in headers.items() if 'nhan vien' in h or 'duoc si' in h or 'nhân viên' in h or 'dược sĩ' in h), 2)
+    col_role = next((c for c, h in headers.items() if 'chuc danh' in h or 'vi tri' in h or 'chức danh' in h or 'vị trí' in h), 3)
+    col_tb = next((c for c, h in headers.items() if 'trung binh bill' in h or 'tb bill' in h or 'tbbill' in h or 'trung bình bill' in h), 4)
+    col_ck = next((c for c, h in headers.items() if 'ck' in h or 'combo' in h or 'ny3' in h), 5)
+    col_rev_ngay = next((c for c, h in headers.items() if 'doanh thu/ngay (100%)' in h or ('doanh thu/ngay' in h and 'thuc' not in h) or 'kpi doanh thu/ngay' in h or 'doanh thu/ngày' in h), 7)
+    
+    col_target = next((c for c, h in headers.items() if f'thang {month_num}' in h or f'thang {month_num:02d}' in h or f't{month_num}' in h or f'tháng {month_num}' in h or f'kpis doanh thu/thang {month_num}' in h or f'kpis doanh thu/tháng {month_num}' in h), None)
+    if not col_target:
+        col_target = next((c for c, h in headers.items() if 'doanh thu/thang' in h or 'kpi thang' in h or 'doanh thu/tháng' in h or 'kpi tháng' in h), None)
+
+    col_nt = next((c for c, h in headers.items() if f'nt thang {month_num}' in h or f'nt thang {month_num:02d}' in h or 'nt thang' in h or 'target nt' in h or f'nt tháng {month_num}' in h or 'nt tháng' in h), None)
+
     days_in_month = calendar.monthrange(2026, month_num)[1]
     staff_list = []
     store_targets = {}
+    current_store = ''
     
-    for r in range(2, ws.max_row + 1):
-        store_val = ws.cell(r, 1).value
-        staff_val = ws.cell(r, 2).value
-        role_val = ws.cell(r, 3).value
-        tb_bill = ws.cell(r, 4).value
-        kpi_ck_cb_ny3_ngay = ws.cell(r, 5).value
-        kpi_rev_ngay = ws.cell(r, 7).value
+    for r in range(h_row + 1, ws.max_row + 1):
+        st_v = ws.cell(r, col_store).value
+        name_v = ws.cell(r, col_name).value
+        role_v = ws.cell(r, col_role).value
+        tb_v = ws.cell(r, col_tb).value
+        ck_v = ws.cell(r, col_ck).value if col_ck else 0
+        rev_ngay_v = ws.cell(r, col_rev_ngay).value if col_rev_ngay else 0
+        tgt_v = ws.cell(r, col_target).value if col_target else 0
+        nt_v = ws.cell(r, col_nt).value if col_nt else 0
         
-        if store_val and staff_val:
-            s_name = str(staff_val).strip()
-            s_store = clean_branch_name(str(store_val))
-            if s_name and s_name.lower() not in ('nhân viên', 'tổng', 'none'):
-                rev_ngay = float(kpi_rev_ngay or 0)
-                kpi_thang = rev_ngay * days_in_month if rev_ngay > 0 else 0
+        if st_v:
+            current_store = clean_branch_name(str(st_v))
+            
+        if nt_v and current_store:
+            try:
+                store_targets[current_store] = float(nt_v)
+            except Exception:
+                pass
+                
+        if name_v and current_store:
+            s_name = str(name_v).strip()
+            if s_name and s_name.lower() not in ('nhan vien', 'tong', 'none', 'tong cong', 'dược sĩ', 'nhân viên', 'tổng'):
+                rev_ngay = float(rev_ngay_v or 0) if isinstance(rev_ngay_v, (int, float)) else 0.0
+                kpi_thang = float(tgt_v or 0) if isinstance(tgt_v, (int, float)) and float(tgt_v) > 0 else (rev_ngay * days_in_month if rev_ngay > 0 else 0.0)
                 staff_list.append({
-                    'store': s_store,
+                    'store': current_store,
                     'name': s_name,
-                    'role': str(role_val or 'BC').strip(),
-                    'tb_bill': float(tb_bill or 0),
-                    'kpi_ck_cb_ny3_ngay': float(kpi_ck_cb_ny3_ngay or 0),
+                    'role': str(role_v or 'BC').strip(),
+                    'tb_bill': float(tb_v or 0) if isinstance(tb_v, (int, float)) else 0.0,
+                    'kpi_ck_cb_ny3_ngay': float(ck_v or 0) if isinstance(ck_v, (int, float)) else 0.0,
                     'kpi_rev_ngay': rev_ngay,
                     'kpi_thang': kpi_thang,
                     'region': 'HN'
                 })
                 
-    # Lấy thêm target nhà thuốc từ sheet KPI nếu có
-    if 'KPI' in wb.sheetnames:
-        ws_kpi = wb['KPI']
-        # Dò dòng tháng month_num
-        for r in range(3, 16):
-            if ws_kpi.cell(r, 1).value == month_num:
-                hb_target = ws_kpi.cell(r, 3).value or ws_kpi.cell(r, 2).value
-                dl_target = ws_kpi.cell(r, 8).value or ws_kpi.cell(r, 7).value
-                if hb_target and float(hb_target) > 0:
-                    store_targets['Hàng Bông'] = float(hb_target)
-                if dl_target and float(dl_target) > 0:
-                    store_targets['Đường Láng'] = float(dl_target)
-                break
-                
-    if 'Hàng Bông' not in store_targets:
-        store_targets['Hàng Bông'] = 1350000000.0
-    if 'Đường Láng' not in store_targets:
-        store_targets['Đường Láng'] = 1100000000.0
+    if 'Hàng Bông' not in store_targets or store_targets['Hàng Bông'] <= 0:
+        store_targets['Hàng Bông'] = 1350000000.0 if month_num == 9 else 1270000000.0
+    if 'Đường Láng' not in store_targets or store_targets['Đường Láng'] <= 0:
+        store_targets['Đường Láng'] = 1100000000.0 if month_num == 9 else 980000000.0
         
     wb.close()
     return staff_list, store_targets

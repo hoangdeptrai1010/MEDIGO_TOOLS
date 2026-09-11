@@ -124,8 +124,14 @@ class KPISheetHandler(SimpleHTTPRequestHandler):
 
         if path.startswith('/api/download/'):
             fname = os.path.basename(urllib.parse.unquote(path[len('/api/download/'):]))
-            fpath = os.path.join(OUTPUT_DIR, fname)
-            if os.path.exists(fpath):
+            cand_paths = [
+                os.path.join(OUTPUT_DIR, fname),
+                os.path.join(_CURRENT_DIR, '..', 'thang9', 'output', fname),
+                os.path.join(_CURRENT_DIR, '..', 'thang8', 'output', fname),
+                os.path.join(_CURRENT_DIR, '..', 'thang7', 'output', fname)
+            ]
+            fpath = next((p for p in cand_paths if os.path.exists(p)), None)
+            if fpath and os.path.exists(fpath):
                 safe_name = urllib.parse.quote(fname)
                 ascii_name = unicodedata.normalize('NFKD', fname).encode('ascii', 'ignore').decode('ascii') or 'kpisheet.xlsx'
                 self.send_response(200)

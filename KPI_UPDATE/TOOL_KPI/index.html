@@ -279,41 +279,73 @@
     </div>
   </header>
 
-  <!-- Step 1: Project Plan -->
-  <div class="section-card">
-    <div class="section-title">
-      <span>1. File Gói Kế Hoạch / Dự Án KPI (.xlsx)</span>
-      <button class="btn-secondary" style="font-size: 12px;" onclick="openPlanBuilderModal()">➕ Tự Dựng File Kế Hoạch</button>
+  <!-- Step 1: Project Plan & Template -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+    <div class="section-card" style="margin-bottom: 0;">
+      <div class="section-title">
+        <span>1. File Gói Kế Hoạch KPI (.xlsx)</span>
+        <button class="btn-secondary" style="font-size: 12px;" onclick="openPlanBuilderModal()">➕ Tự Dựng</button>
+      </div>
+      <div class="dropzone-card" id="drop-project" onclick="document.getElementById('file-project').click()">
+        <input type="file" id="file-project" accept=".xlsx,.xls" style="display: none;">
+        <div style="font-size: 26px; margin-bottom: 4px;">📊</div>
+        <div style="font-weight: 700; font-size: 13px; margin-bottom: 2px;">Kéo thả File Kế Hoạch vào đây</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;"><code>KeHoachKPI_2026-xx.xlsx</code></div>
+        <div id="status-project"><span style="color: #94a3b8; font-size: 12px;">Mặc định theo kỳ tháng</span></div>
+      </div>
     </div>
-    <div class="dropzone-card" id="drop-project" onclick="document.getElementById('file-project').click()">
-      <input type="file" id="file-project" accept=".xlsx,.xls" style="display: none;">
-      <div style="font-size: 28px; margin-bottom: 6px;">📊</div>
-      <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Kéo thả File Kế Hoạch / Dự Án KPI vào đây</div>
-      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">File <code>KeHoachKPI_2026-xx.xlsx</code> để định hình số Sheet nhà thuốc & danh mục SKUs</div>
-      <div id="status-project"><span style="color: #94a3b8; font-size: 12px;">Chưa chọn (Hệ thống sẽ dùng file kế hoạch mặc định của tháng)</span></div>
+
+    <div class="section-card" style="margin-bottom: 0;">
+      <div class="section-title">
+        <span>2. File Template Mẫu Báo Cáo (.xlsx)</span>
+        <button class="btn-secondary" style="font-size: 12px;" onclick="document.getElementById('file-template').value = ''; fileState.templateBase64 = null; document.getElementById('status-template').innerHTML = '<span style=\'color: #94a3b8; font-size: 12px;\'>Mặc định theo mẫu chuẩn</span>'; document.getElementById('drop-template').classList.remove('has-file'); showToast('Đã xóa mẫu tùy chọn, dùng mẫu chuẩn');">Mặc định</button>
+      </div>
+      <div class="dropzone-card" id="drop-template" onclick="document.getElementById('file-template').click()">
+        <input type="file" id="file-template" accept=".xlsx,.xls" style="display: none;">
+        <div style="font-size: 26px; margin-bottom: 4px;">📑</div>
+        <div style="font-weight: 700; font-size: 13px; margin-bottom: 2px;">Kéo thả File Template Mẫu vào đây</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;"><code>NHÀ THUỐC THÁNG xx 2026.xlsx</code></div>
+        <div id="status-template"><span style="color: #94a3b8; font-size: 12px;">Chưa chọn (Dùng mẫu chuẩn gốc)</span></div>
+      </div>
     </div>
   </div>
 
-  <!-- Step 2: Invoices -->
+  <!-- Step 2: Invoices & Cutoff Date -->
   <div class="section-card">
     <div class="section-title">
-      <span>2. Nạp File Hóa Đơn & Trả Hàng (KiotViet)</span>
+      <span>3. Nạp File Hóa Đơn & Trả Hàng (KiotViet)</span>
     </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
       <div class="dropzone-card" id="drop-hd" onclick="document.getElementById('file-hd').click()">
         <input type="file" id="file-hd" accept=".xlsx,.xls" style="display: none;">
-        <div style="font-size: 28px; margin-bottom: 6px;">🧾</div>
-        <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">File Chi Tiết Hóa Đơn (Bắt buộc)</div>
-        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;"><code>DanhSachChiTietHoaDon_...xlsx</code></div>
+        <div style="font-size: 26px; margin-bottom: 4px;">🧾</div>
+        <div style="font-weight: 700; font-size: 13px; margin-bottom: 2px;">File Chi Tiết Hóa Đơn (Bắt buộc)</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;"><code>DanhSachChiTietHoaDon_...xlsx</code></div>
         <div id="status-hd"><span style="color: #94a3b8; font-size: 12px;">Bấm hoặc kéo thả file</span></div>
       </div>
 
       <div class="dropzone-card" id="drop-th" onclick="document.getElementById('file-th').click()">
         <input type="file" id="file-th" accept=".xlsx,.xls" style="display: none;">
-        <div style="font-size: 28px; margin-bottom: 6px;">↩️</div>
-        <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">File Trả Hàng (Tùy chọn)</div>
-        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;"><code>DanhSachChiTietTraHang_...xlsx</code></div>
+        <div style="font-size: 26px; margin-bottom: 4px;">↩️</div>
+        <div style="font-weight: 700; font-size: 13px; margin-bottom: 2px;">File Trả Hàng (Tùy chọn)</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;"><code>DanhSachChiTietTraHang_...xlsx</code></div>
         <div id="status-th"><span style="color: #94a3b8; font-size: 12px;">Bấm hoặc kéo thả file</span></div>
+      </div>
+    </div>
+
+    <!-- Date Cutoff Picker -->
+    <div style="background: #080d1a; border: 1px solid #1e293b; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="font-size: 20px;">📅</div>
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: #f1f5f9;">Ngày Chốt Báo Cáo KPI (Tùy chọn / Tự động):</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Nếu để trống, hệ thống sẽ tự động phát hiện ngày giao dịch mới nhất trong hóa đơn</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <input type="date" id="input-report-date" class="form-control" style="font-size: 13px; padding: 6px 10px; cursor: pointer;">
+        <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="document.getElementById('input-report-date').value = ''; showToast('Đã xóa ngày chốt, hệ thống sẽ tự phát hiện theo dữ liệu');">Xóa</button>
       </div>
     </div>
   </div>
@@ -388,7 +420,7 @@
 
 <script>
   let currentMonth = 8;
-  let fileState = { projectBase64: null, hoadonBase64: null, trahangBase64: null };
+  let fileState = { projectBase64: null, templateBase64: null, hoadonBase64: null, trahangBase64: null };
 
   function showToast(msg, isError = false) {
     const t = document.getElementById('toast');
@@ -407,6 +439,7 @@
   function setupDropzones() {
     const drops = [
       { id: 'drop-project', inputId: 'file-project', type: 'project' },
+      { id: 'drop-template', inputId: 'file-template', type: 'template' },
       { id: 'drop-hd', inputId: 'file-hd', type: 'hd' },
       { id: 'drop-th', inputId: 'file-th', type: 'th' }
     ];
@@ -437,6 +470,12 @@
         fileState.projectBase64 = base64;
         document.getElementById('status-project').innerHTML = `<span style="color: #34d399; font-weight: 700;">✅ ${file.name}</span>`;
         document.getElementById('drop-project').classList.add('has-file');
+        showToast(`Đã nạp file kế hoạch: ${file.name}`);
+      } else if (type === 'template') {
+        fileState.templateBase64 = base64;
+        document.getElementById('status-template').innerHTML = `<span style="color: #34d399; font-weight: 700;">✅ ${file.name}</span>`;
+        document.getElementById('drop-template').classList.add('has-file');
+        showToast(`Đã nạp file template mẫu: ${file.name}`);
       } else if (type === 'hd') {
         fileState.hoadonBase64 = base64;
         document.getElementById('status-hd').innerHTML = `<span style="color: #34d399; font-weight: 700;">✅ ${file.name}</span>`;
@@ -446,6 +485,7 @@
         fileState.trahangBase64 = base64;
         document.getElementById('status-th').innerHTML = `<span style="color: #34d399; font-weight: 700;">✅ ${file.name}</span>`;
         document.getElementById('drop-th').classList.add('has-file');
+        showToast(`Đã nạp file trả hàng: ${file.name}`);
       }
     };
     reader.readAsDataURL(file);
@@ -456,6 +496,8 @@
     btn.disabled = true;
     btn.innerHTML = `<span>⏳</span> Đang xử lý KPI...`;
 
+    const reportDateInput = document.getElementById('input-report-date').value;
+
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -464,18 +506,20 @@
           hoadon_base64: fileState.hoadonBase64,
           trahang_base64: fileState.trahangBase64,
           plan_base64: fileState.projectBase64,
+          template_base64: fileState.templateBase64,
+          report_date: reportDateInput || null,
           month: currentMonth
         })
       });
 
       const data = await res.json();
       if (data.success) {
-        showToast(`🎉 Tạo Báo Cáo KPI Tháng ${currentMonth} thành công!`);
+        showToast(`🎉 Tạo Báo Cáo KPI Tháng ${data.stats.month || currentMonth} thành công!`);
         const st = data.stats;
-        document.getElementById('lbl-kpi-rev').innerText = (st.total_revenue || 0).toLocaleString('vi-VN') + ' đ';
-        document.getElementById('lbl-kpi-tx').innerText = (st.total_invoices || 0).toLocaleString('vi-VN') + ' dòng';
-        document.getElementById('lbl-kpi-proj').innerText = (st.total_project_sales || 0).toLocaleString('vi-VN') + ' đ';
-        document.getElementById('lbl-kpi-rewarded').innerText = (st.staff_rewarded_count || 0) + ' Dược sĩ';
+        document.getElementById('lbl-kpi-rev').innerText = (st.total_rev || st.total_revenue || 0).toLocaleString('vi-VN') + ' đ';
+        document.getElementById('lbl-kpi-tx').innerText = (st.invoice_count || st.total_invoices || 0).toLocaleString('vi-VN') + ' dòng';
+        document.getElementById('lbl-kpi-proj').innerText = ((st.tot_ny3 || 0) + (st.tot_ck || 0) + (st.tot_combo || 0) || st.total_project_sales || 0).toLocaleString('vi-VN') + ' đ';
+        document.getElementById('lbl-kpi-rewarded').innerText = (st.staff_list ? st.staff_list.length : (st.staff_rewarded_count || 0)) + ' Dược sĩ';
         document.getElementById('btn-download-kpi').href = `/download?filename=${data.filename}`;
         document.getElementById('kpi-result-box').style.display = 'block';
       } else {
